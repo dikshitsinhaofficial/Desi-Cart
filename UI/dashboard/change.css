@@ -1,0 +1,155 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background-color: #f4f6f9;
+    display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: #6c2bd9;
+    min-height: 100vh;
+    color: white;
+    padding: 20px 0;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    padding: 15px 25px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.sidebar ul li:hover,
+.sidebar ul li.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left: 4px solid white;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 25px;
+}
+
+/* Top Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    font-size: 24px;
+    color: #333;
+}
+
+.profile {
+    width: 40px;
+    height: 40px;
+    background: #ddd;
+    border-radius: 50%;
+}
+
+/* Filters Section */
+.filters {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.filters select,
+.filters button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.filters button {
+    background: #6c2bd9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filters button:hover {
+    background: #5a23b8;
+}
+
+/* Cards Grid */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+/* Individual Card */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.card h2 {
+    font-size: 22px;
+    color: #333;
+}
+
+.card .positive {
+    color: green;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.card .negative {
+    color: red;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* Responsive */
+@media(max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+
+    body {
+        flex-direction: column;
+    }
+}
