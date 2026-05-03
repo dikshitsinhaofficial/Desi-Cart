@@ -96,7 +96,7 @@ export default function ShopPage() {
           <Link href="/" className="shrink-0">
             <Image src="/logo.png" alt="Desi Cart" width={90} height={36} priority />
           </Link>
-          <div className="flex flex-1">
+          <div className="flex flex-1 mx-4">
             <input
               type="text"
               placeholder="Search products, brands and more…"
@@ -106,9 +106,14 @@ export default function ShopPage() {
             />
             <button className="bg-orange-300 hover:bg-orange-200 transition px-4 rounded-r-md text-gray-800">🔍</button>
           </div>
+
+          <div className="hidden lg:block">
+            <Wallet />
+          </div>
+
           <button
             onClick={() => setShowCart(!showCart)}
-            className="relative flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition px-3 py-2 rounded-md text-sm font-medium"
+            className="relative flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition px-3 py-2 rounded-md text-sm font-medium ml-2"
           >
             🛒 Cart
             {cart.length > 0 && (

@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -10,6 +12,12 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// ── Razorpay Setup ──
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret',
+});
 
 // ── MongoDB Connection ──
 const MONGO_URI = process.env.MONGO_URI;
@@ -22,7 +30,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// ── Product Model ──
+// ── Models ──
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
@@ -34,8 +42,18 @@ const productSchema = new mongoose.Schema({
   reviews: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
-
 const Product = mongoose.model('Product', productSchema);
+
+const walletSchema = new mongoose.Schema({
+  balance: { type: Number, default: 0 },
+  transactions: [{
+    amount: Number,
+    type: { type: String, enum: ['topup', 'purchase'] },
+    status: String,
+    date: { type: Date, default: Date.now }
+  }]
+});
+const Wallet = mongoose.model('Wallet', walletSchema);
 
 // ── Seeding Logic ──
 const seedDatabase = async () => {
@@ -66,6 +84,54 @@ seedDatabase();
 
 // ── API Routes ──
 
+// GET Wallet Balance
+app.get('/api/wallet', async (req, res) => {
+  let wallet = await Wallet.findOne();
+  if (!wallet) {
+    wallet = new Wallet({ balance: 0 });
+    await wallet.save();
+  }
+  res.json(wallet);
+});
+
+// Create Razorpay Order for Wallet Top-up
+app.post('/api/wallet/create-order', async (req, res) => {
+  const { amount } = req.body;
+  try {
+    const options = {
+      amount: amount * 100,
+      currency: "INR",
+      receipt: `receipt_topup_${Date.now()}`,
+    };
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create payment order' });
+  }
+});
+
+// Verify Payment and Update Wallet
+app.post('/api/wallet/verify-payment', async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+
+  const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret');
+  hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+  const generated_signature = hmac.digest('hex');
+
+  if (generated_signature === razorpay_signature) {
+    let wallet = await Wallet.findOne();
+    if (!wallet) wallet = new Wallet({ balance: 0 });
+    
+    wallet.balance += Number(amount);
+    wallet.transactions.push({ amount, type: 'topup', status: 'success' });
+    await wallet.save();
+    
+    res.json({ success: true, balance: wallet.balance });
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid signature' });
+  }
+});
+
 // GET all products
 app.get('/api/products', async (req, res) => {
   const { category } = req.query;
@@ -81,45 +147,27 @@ app.get('/api/products', async (req, res) => {
 // POST add a new product
 app.post('/api/products', async (req, res) => {
   const { name, category, price, mrp, description, sellerName } = req.body;
-
-  if (!name || !category || !price) {
-    return res.status(400).json({ error: 'name, category and price are required' });
-  }
-
+  if (!name || !category || !price) return res.status(400).json({ error: 'Required fields missing' });
   try {
-    const product = new Product({
-      name,
-      category,
-      price: Number(price),
-      mrp: Number(mrp) || Number(price),
-      description,
-      sellerName
-    });
+    const product = new Product({ name, category, price, mrp, description, sellerName });
     await product.save();
     res.status(201).json(product);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to add product' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to add product' }); }
 });
 
-// DELETE a product by id
+// DELETE a product
 app.delete('/api/products/:id', async (req, res) => {
-  const { id } = req.params;
   try {
-    await Product.findByIdAndDelete(id);
+    await Product.findByIdAndDelete(req.params.id);
     res.json({ message: 'Product deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete product' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Delete failed' }); }
 });
 
 // Health check
 app.get('/', (req, res) => {
-  res.send('Desi-Cart API is running with MongoDB persistence...');
+  res.send('Desi-Cart API with Razorpay and Wallet is live...');
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-
