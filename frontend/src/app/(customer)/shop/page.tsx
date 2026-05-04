@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Wallet from '../../components/Wallet';
 
 const API = 'http://localhost:5000';
 
@@ -18,22 +19,22 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 const PRODUCTS = [
-  { id: 1,  name: 'Wireless Earbuds Pro',     category: 'Electronics', price: 1299, mrp: 2999, rating: 4.3, reviews: 2341, emoji: '🎧', color: 'from-purple-500 to-blue-500',   badge: 'Best Seller' },
-  { id: 2,  name: 'Cotton Kurta Set',          category: 'Fashion',     price: 799,  mrp: 1499, rating: 4.1, reviews: 876,  emoji: '👕', color: 'from-orange-400 to-pink-500',  badge: '' },
-  { id: 3,  name: 'Smart LED Bulb Pack',       category: 'Home',        price: 449,  mrp: 899,  rating: 4.5, reviews: 5678, emoji: '💡', color: 'from-yellow-400 to-orange-400', badge: 'Deal of Day' },
-  { id: 4,  name: 'Python Programming Book',   category: 'Books',       price: 349,  mrp: 699,  rating: 4.7, reviews: 1234, emoji: '📚', color: 'from-green-500 to-teal-500',   badge: '' },
-  { id: 5,  name: 'Bluetooth Speaker Mini',    category: 'Electronics', price: 999,  mrp: 1999, rating: 4.2, reviews: 3412, emoji: '🔊', color: 'from-blue-600 to-indigo-600',  badge: 'Top Rated' },
-  { id: 6,  name: 'Yoga Mat Premium',          category: 'Sports',      price: 599,  mrp: 1199, rating: 4.4, reviews: 987,  emoji: '🧘', color: 'from-teal-400 to-cyan-500',   badge: '' },
-  { id: 7,  name: 'Face Serum Vitamin C',      category: 'Beauty',      price: 499,  mrp: 999,  rating: 4.6, reviews: 4567, emoji: '✨', color: 'from-pink-400 to-rose-500',   badge: 'New' },
-  { id: 8,  name: 'LEGO Building Set',         category: 'Toys',        price: 1499, mrp: 2499, rating: 4.8, reviews: 2109, emoji: '🧩', color: 'from-red-400 to-orange-500',   badge: "Kids' Choice" },
-  { id: 9,  name: 'Mechanical Keyboard',       category: 'Electronics', price: 2499, mrp: 4999, rating: 4.5, reviews: 1876, emoji: '⌨️', color: 'from-gray-600 to-gray-800',   badge: '' },
-  { id: 10, name: 'Ethnic Saree Cotton',       category: 'Fashion',     price: 1299, mrp: 2499, rating: 4.3, reviews: 654,  emoji: '🥻', color: 'from-amber-500 to-yellow-500', badge: '' },
-  { id: 11, name: 'Air Fryer 4L',             category: 'Home',        price: 3499, mrp: 5999, rating: 4.6, reviews: 3210, emoji: '🍳', color: 'from-slate-500 to-gray-600',   badge: 'Best Seller' },
-  { id: 12, name: 'Cricket Bat Kashmir',       category: 'Sports',      price: 899,  mrp: 1799, rating: 4.2, reviews: 432,  emoji: '🏏', color: 'from-lime-500 to-green-600',  badge: '' },
-  { id: 13, name: 'Moisturizer SPF 50',        category: 'Beauty',      price: 299,  mrp: 599,  rating: 4.4, reviews: 7890, emoji: '🧴', color: 'from-sky-400 to-blue-500',    badge: 'Popular' },
-  { id: 14, name: 'Story Books Bundle',        category: 'Books',       price: 499,  mrp: 999,  rating: 4.5, reviews: 876,  emoji: '📖', color: 'from-violet-500 to-purple-600', badge: '' },
-  { id: 15, name: 'USB-C Hub 7-in-1',         category: 'Electronics', price: 1799, mrp: 3499, rating: 4.3, reviews: 2345, emoji: '🔌', color: 'from-cyan-500 to-blue-600',   badge: '' },
-  { id: 16, name: 'Resistance Band Set',       category: 'Sports',      price: 399,  mrp: 799,  rating: 4.1, reviews: 1234, emoji: '💪', color: 'from-emerald-500 to-green-500', badge: 'New' },
+  { id: 1,  name: 'Wireless Earbuds Pro',     category: 'Electronics', price: 1299, mrp: 2999, rating: 4.3, reviews: 2341, image: '/images/earbuds.png', color: 'from-purple-500 to-blue-500',   badge: 'Best Seller' },
+  { id: 2,  name: 'Cotton Kurta Set',          category: 'Fashion',     price: 799,  mrp: 1499, rating: 4.1, reviews: 876,  image: '/images/kurta.png', color: 'from-orange-400 to-pink-500',  badge: '' },
+  { id: 3,  name: 'Smart LED Bulb Pack',       category: 'Home',        price: 449,  mrp: 899,  rating: 4.5, reviews: 5678, image: '/images/bulb.png', color: 'from-yellow-400 to-orange-400', badge: 'Deal of Day' },
+  { id: 4,  name: 'Python Programming Book',   category: 'Books',       price: 349,  mrp: 699,  rating: 4.7, reviews: 1234, image: '/images/book.png', color: 'from-green-500 to-teal-500',   badge: '' },
+  { id: 5,  name: 'Bluetooth Speaker Mini',    category: 'Electronics', price: 999,  mrp: 1999, rating: 4.2, reviews: 3412, image: '/images/speaker.png', color: 'from-blue-600 to-indigo-600',  badge: 'Top Rated' },
+  { id: 6,  name: 'Yoga Mat Premium',          category: 'Sports',      price: 599,  mrp: 1199, rating: 4.4, reviews: 987,  image: '/images/yoga.png', color: 'from-teal-400 to-cyan-500',   badge: '' },
+  { id: 7,  name: 'Face Serum Vitamin C',      category: 'Beauty',      price: 499,  mrp: 999,  rating: 4.6, reviews: 4567, image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400', color: 'from-pink-400 to-rose-500',   badge: 'New' },
+  { id: 8,  name: 'LEGO Building Set',         category: 'Toys',        price: 1499, mrp: 2499, rating: 4.8, reviews: 2109, image: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400', color: 'from-red-400 to-orange-500',   badge: "Kids' Choice" },
+  { id: 9,  name: 'Mechanical Keyboard',       category: 'Electronics', price: 2499, mrp: 4999, rating: 4.5, reviews: 1876, image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=400', color: 'from-gray-600 to-gray-800',   badge: '' },
+  { id: 10, name: 'Ethnic Saree Cotton',       category: 'Fashion',     price: 1299, mrp: 2499, rating: 4.3, reviews: 654,  image: 'https://images.unsplash.com/photo-1610189013778-591db30efca6?w=400', color: 'from-amber-500 to-yellow-500', badge: '' },
+  { id: 11, name: 'Air Fryer 4L',             category: 'Home',        price: 3499, mrp: 5999, rating: 4.6, reviews: 3210, image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400', color: 'from-slate-500 to-gray-600',   badge: 'Best Seller' },
+  { id: 12, name: 'Cricket Bat Kashmir',       category: 'Sports',      price: 899,  mrp: 1799, rating: 4.2, reviews: 432,  image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=400', color: 'from-lime-500 to-green-600',  badge: '' },
+  { id: 13, name: 'Moisturizer SPF 50',        category: 'Beauty',      price: 299,  mrp: 599,  rating: 4.4, reviews: 7890, image: 'https://images.unsplash.com/photo-1617897903246-719242758050?w=400', color: 'from-sky-400 to-blue-500',    badge: 'Popular' },
+  { id: 14, name: 'Story Books Bundle',        category: 'Books',       price: 499,  mrp: 999,  rating: 4.5, reviews: 876,  image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400', color: 'from-violet-500 to-purple-600', badge: '' },
+  { id: 15, name: 'USB-C Hub 7-in-1',         category: 'Electronics', price: 1799, mrp: 3499, rating: 4.3, reviews: 2345, image: 'https://images.unsplash.com/photo-1647414907153-6ce8bd0558b3?w=400', color: 'from-cyan-500 to-blue-600',   badge: '' },
+  { id: 16, name: 'Resistance Band Set',       category: 'Sports',      price: 399,  mrp: 799,  rating: 4.1, reviews: 1234, image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=400', color: 'from-emerald-500 to-green-500', badge: 'New' },
 ];
 
 const CATEGORIES = ['All', 'Electronics', 'Fashion', 'Home', 'Books', 'Sports', 'Beauty', 'Toys'];
@@ -47,15 +48,16 @@ export default function ShopPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [showCart, setShowCart] = useState(false);
   const [apiProducts, setApiProducts] = useState<typeof PRODUCTS>([]);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // Fetch seller-added products from backend
   useEffect(() => {
     fetch(`${API}/api/products`)
       .then(r => r.json())
-      .then((data: Array<{ id: number; name: string; category: string; price: number; mrp: number; rating: number; reviews: number }>) => {
+      .then((data: Array<any>) => {
         const mapped = data.map(p => ({
           ...p,
-          emoji: EMOJI_MAP[p.category] ?? EMOJI_MAP.default,
+          image: p.image || `https://images.unsplash.com/photo-1555529733-0e67056058e1?w=400`,
           color: COLOR_MAP[p.category] ?? COLOR_MAP.default,
           badge: 'New Arrival',
         }));
@@ -85,6 +87,61 @@ export default function ShopPage() {
     setCart(prev => [...prev, p.id]);
     setToast(`${p.name} added!`);
     setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleCheckout = async () => {
+    if (cartTotal === 0) return;
+    setCheckoutLoading(true);
+    try {
+      const orderRes = await fetch(`${API}/api/checkout/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: cartTotal }),
+      });
+      const orderData = await orderRes.json();
+
+      if (orderData.error) {
+        setToast("Please add real Razorpay Keys in backend/.env to process payments.");
+        setCheckoutLoading(false);
+        return;
+      }
+
+      const options = {
+        key: orderData.key_id || "rzp_test_placeholder",
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Desi Cart Checkout",
+        description: "Complete your purchase",
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          const verifyRes = await fetch(`${API}/api/checkout/verify-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            setToast("Payment Successful!");
+            setCart([]);
+            setShowCart(false);
+            setTimeout(() => setToast(null), 2500);
+          }
+        },
+        theme: { color: "#f97316" },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      setToast("Payment Failed");
+      setTimeout(() => setToast(null), 2500);
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (
@@ -204,8 +261,12 @@ export default function ShopPage() {
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group border border-gray-100 dark:border-gray-700 flex flex-col"
               >
                 {/* Image area */}
-                <div className={`relative h-44 bg-gradient-to-br ${p.color} flex items-center justify-center`}>
-                  <span className="text-6xl group-hover:scale-110 transition-transform duration-300 select-none">{p.emoji}</span>
+                <div className={`relative h-44 bg-gradient-to-br ${p.color} flex items-center justify-center overflow-hidden`}>
+                  {p.image ? (
+                    <Image src={p.image} alt={p.name} width={176} height={176} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300" />
+                  ) : (
+                    <span className="text-6xl group-hover:scale-110 transition-transform duration-300 select-none">{p.emoji || '📦'}</span>
+                  )}
                   {p.badge && (
                     <span className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                       {p.badge}
@@ -263,8 +324,12 @@ export default function ShopPage() {
               ) : (
                 cartItems.map((p, i) => (
                   <div key={`${p.id}-${i}`} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${p.color} flex items-center justify-center text-2xl shrink-0`}>
-                      {p.emoji}
+                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${p.color} flex items-center justify-center text-2xl shrink-0 overflow-hidden`}>
+                      {p.image ? (
+                        <Image src={p.image} alt={p.name} width={48} height={48} className="object-cover w-full h-full" />
+                      ) : (
+                        p.emoji || '📦'
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
@@ -280,8 +345,15 @@ export default function ShopPage() {
                   <span className="font-semibold">Total</span>
                   <span className="font-bold text-lg">₹{cartTotal.toLocaleString()}</span>
                 </div>
-                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors">
-                  Proceed to Checkout
+                <button 
+                  onClick={handleCheckout} 
+                  disabled={checkoutLoading} 
+                  className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {checkoutLoading ? (
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                  ) : null}
+                  {checkoutLoading ? "Processing..." : "Proceed to Checkout"}
                 </button>
               </div>
             )}

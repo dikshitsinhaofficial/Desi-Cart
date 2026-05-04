@@ -104,7 +104,7 @@ app.post('/api/wallet/create-order', async (req, res) => {
       receipt: `receipt_topup_${Date.now()}`,
     };
     const order = await razorpay.orders.create(options);
-    res.json(order);
+    res.json({ ...order, key_id: process.env.RAZORPAY_KEY_ID });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create payment order' });
   }
@@ -127,6 +127,37 @@ app.post('/api/wallet/verify-payment', async (req, res) => {
     await wallet.save();
     
     res.json({ success: true, balance: wallet.balance });
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid signature' });
+  }
+});
+
+// Create Razorpay Order for Checkout
+app.post('/api/checkout/create-order', async (req, res) => {
+  const { amount } = req.body;
+  try {
+    const options = {
+      amount: amount * 100, // amount in the smallest currency unit
+      currency: "INR",
+      receipt: `receipt_checkout_${Date.now()}`,
+    };
+    const order = await razorpay.orders.create(options);
+    res.json({ ...order, key_id: process.env.RAZORPAY_KEY_ID });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create checkout payment order' });
+  }
+});
+
+// Verify Checkout Payment
+app.post('/api/checkout/verify-payment', async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret');
+  hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+  const generated_signature = hmac.digest('hex');
+
+  if (generated_signature === razorpay_signature) {
+    res.json({ success: true, message: 'Payment verified successfully' });
   } else {
     res.status(400).json({ success: false, message: 'Invalid signature' });
   }

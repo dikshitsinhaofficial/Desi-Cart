@@ -34,9 +34,15 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
       });
       const orderData = await orderRes.json();
 
+      if (orderData.error) {
+        alert("Please add real Razorpay Keys in backend/.env to process payments.");
+        setLoading(false);
+        return;
+      }
+
       // 2. Open Razorpay Checkout
       const options = {
-        key: "rzp_test_placeholder", // User should replace this in .env eventually
+        key: orderData.key_id || "rzp_test_placeholder", 
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Desi Cart Wallet",
