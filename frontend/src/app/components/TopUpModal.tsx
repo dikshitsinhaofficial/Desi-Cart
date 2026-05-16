@@ -27,7 +27,7 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
     setLoading(true);
     try {
       // 1. Create Order in Backend
-      const orderRes = await fetch("http://localhost:5000/api/wallet/create-order", {
+      const orderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/wallet/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: Number(amount) }),
@@ -47,10 +47,28 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
         currency: orderData.currency,
         name: "Desi Cart Wallet",
         description: "Add money to your Desi Cart Wallet",
+        image: "/logo.png",
         order_id: orderData.id,
+        prefill: {
+          name: "Desi Cart User",
+          email: "user@desicart.com",
+          contact: "9999999999",
+        },
+        config: {
+          display: {
+            blocks: {
+              utib: { name: "Pay via UPI", instruments: [{ method: "upi" }] },
+              card: { name: "Pay via Card", instruments: [{ method: "card" }] },
+              nb: { name: "Net Banking", instruments: [{ method: "netbanking" }] },
+              wallet: { name: "Wallets", instruments: [{ method: "wallet" }] },
+            },
+            sequence: ["block.utib", "block.card", "block.nb", "block.wallet"],
+            preferences: { show_default_blocks: true },
+          },
+        },
         handler: async function (response: any) {
           // 3. Verify Payment
-          const verifyRes = await fetch("http://localhost:5000/api/wallet/verify-payment", {
+          const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/wallet/verify-payment`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

@@ -4,7 +4,8 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 
 const CATEGORIES = ['Electronics', 'Fashion', 'Home', 'Books', 'Sports', 'Beauty', 'Toys', 'Daily Use'];
-const API = 'http://localhost:5000';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 
 interface Product {
   id: number;

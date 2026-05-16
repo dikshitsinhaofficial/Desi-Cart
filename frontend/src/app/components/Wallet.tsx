@@ -12,7 +12,7 @@ export default function Wallet() {
 
   const fetchBalance = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/wallet");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/wallet`);
       const data = await res.json();
       setBalance(data.balance);
     } catch (err) {

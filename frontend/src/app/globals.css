@@ -3,8 +3,10 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Modern warm off-white */
+  --background: #faf9f6;
+  /* Deep slate for text */
+  --foreground: #1e293b;
 }
 
 @theme inline {
@@ -16,8 +18,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Sleek, deep midnight blue */
+    --background: #0d1321;
+    /* Soft, readable light slate */
+    --foreground: #f8fafc;
   }
 }
 

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Wallet from '../../components/Wallet';
 
-const API = 'http://localhost:5000';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Category emoji map for seller-added products
 const EMOJI_MAP: Record<string, string> = {
@@ -110,9 +110,27 @@ export default function ShopPage() {
         key: orderData.key_id || "rzp_test_placeholder",
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "Desi Cart Checkout",
+        name: "Desi Cart",
         description: "Complete your purchase",
+        image: "/logo.png",
         order_id: orderData.id,
+        prefill: {
+          name: "Desi Cart User",
+          email: "user@desicart.com",
+          contact: "9999999999",
+        },
+        config: {
+          display: {
+            blocks: {
+              utib: { name: "Pay via UPI", instruments: [{ method: "upi" }] },
+              card: { name: "Pay via Card", instruments: [{ method: "card" }] },
+              nb: { name: "Net Banking", instruments: [{ method: "netbanking" }] },
+              wallet: { name: "Wallets", instruments: [{ method: "wallet" }] },
+            },
+            sequence: ["block.utib", "block.card", "block.nb", "block.wallet"],
+            preferences: { show_default_blocks: true },
+          },
+        },
         handler: async function (response: any) {
           const verifyRes = await fetch(`${API}/api/checkout/verify-payment`, {
             method: "POST",
