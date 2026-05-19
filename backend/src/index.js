@@ -19,16 +19,46 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret',
 });
 
-// ── MongoDB Connection ──
+// ── MongoDB Connection & Fallback ──
 const MONGO_URI = process.env.MONGO_URI;
+let isMongoConnected = false;
+let inMemoryProducts = [];
+let inMemoryWallet = {
+  balance: 0,
+  transactions: []
+};
+
+const seedInMemory = () => {
+  inMemoryProducts = [
+    { _id: "m1", name: "Men's Cotton Casual Shirt", category: "Fashion", price: 899, mrp: 1499, description: "Comfortable pure cotton shirt for daily wear.", sellerName: "Dhanraj", rating: 4.2, reviews: 120 },
+    { _id: "m2", name: "Women's Floral Summer Dress", category: "Fashion", price: 1299, mrp: 2499, description: "Breezy floral dress perfect for summer outings.", sellerName: "Dhanraj", rating: 4.5, reviews: 340 },
+    { _id: "m3", name: "Unisex Denim Jacket", category: "Fashion", price: 1999, mrp: 3999, description: "Classic blue denim jacket with a modern fit.", sellerName: "Dhanraj", rating: 4.7, reviews: 890 },
+    { _id: "m4", name: "Men's Slim Fit Chinos", category: "Fashion", price: 1099, mrp: 1999, description: "Stretchable slim fit chinos for office and casual wear.", sellerName: "Dhanraj", rating: 4.1, reviews: 45 },
+    { _id: "m5", name: "Women's Ethnic Kurti", category: "Fashion", price: 799, mrp: 1299, description: "Beautiful printed kurti with traditional motifs.", sellerName: "Dhanraj", rating: 4.4, reviews: 210 },
+    { _id: "m6", name: "Men's Sports T-Shirt", category: "Fashion", price: 499, mrp: 999, description: "Dry-fit activewear t-shirt for workouts.", sellerName: "Dhanraj", rating: 4.6, reviews: 560 },
+    { _id: "m7", name: "Women's High-Waist Jeans", category: "Fashion", price: 1499, mrp: 2999, description: "Trendy high-waist denim jeans with a flattering fit.", sellerName: "Dhanraj", rating: 4.3, reviews: 150 },
+    { _id: "m8", name: "Unisex Winter Hoodie", category: "Fashion", price: 1199, mrp: 2499, description: "Warm and cozy fleece hoodie with front pocket.", sellerName: "Dhanraj", rating: 4.8, reviews: 1020 },
+    { _id: "m9", name: "Men's Formal Trousers", category: "Fashion", price: 1299, mrp: 2199, description: "Premium fabric formal trousers for business wear.", sellerName: "Dhanraj", rating: 4.2, reviews: 85 },
+    { _id: "m10", name: "Women's Silk Saree", category: "Fashion", price: 3499, mrp: 5999, description: "Elegant silk saree with intricate zari border.", sellerName: "Dhanraj", rating: 4.9, reviews: 430 }
+  ];
+  console.log('In-memory database seeded with initial products.');
+};
+
+seedInMemory();
 
 if (!MONGO_URI || MONGO_URI.includes('<db_password>')) {
   console.error('ERROR: Please replace <db_password> in your .env file with your actual database password!');
 }
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 2000 })
+  .then(() => {
+    isMongoConnected = true;
+    console.log('Connected to MongoDB Atlas');
+    seedDatabase();
+  })
+  .catch(err => {
+    console.error('MongoDB Connection Error. Falling back to In-Memory DB:', err.message);
+  });
 
 // ── Models ──
 const productSchema = new mongoose.Schema({
@@ -80,18 +110,24 @@ const seedDatabase = async () => {
   }
 };
 
-seedDatabase();
-
 // ── API Routes ──
 
 // GET Wallet Balance
 app.get('/api/wallet', async (req, res) => {
-  let wallet = await Wallet.findOne();
-  if (!wallet) {
-    wallet = new Wallet({ balance: 0 });
-    await wallet.save();
+  try {
+    if (isMongoConnected) {
+      let wallet = await Wallet.findOne();
+      if (!wallet) {
+        wallet = new Wallet({ balance: 0 });
+        await wallet.save();
+      }
+      res.json(wallet);
+    } else {
+      res.json(inMemoryWallet);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch wallet' });
   }
-  res.json(wallet);
 });
 
 // Create Razorpay Order for Wallet Top-up
@@ -119,14 +155,20 @@ app.post('/api/wallet/verify-payment', async (req, res) => {
   const generated_signature = hmac.digest('hex');
 
   if (generated_signature === razorpay_signature) {
-    let wallet = await Wallet.findOne();
-    if (!wallet) wallet = new Wallet({ balance: 0 });
-    
-    wallet.balance += Number(amount);
-    wallet.transactions.push({ amount, type: 'topup', status: 'success' });
-    await wallet.save();
-    
-    res.json({ success: true, balance: wallet.balance });
+    if (isMongoConnected) {
+      let wallet = await Wallet.findOne();
+      if (!wallet) wallet = new Wallet({ balance: 0 });
+      
+      wallet.balance += Number(amount);
+      wallet.transactions.push({ amount, type: 'topup', status: 'success' });
+      await wallet.save();
+      
+      res.json({ success: true, balance: wallet.balance });
+    } else {
+      inMemoryWallet.balance += Number(amount);
+      inMemoryWallet.transactions.push({ amount, type: 'topup', status: 'success', date: new Date() });
+      res.json({ success: true, balance: inMemoryWallet.balance });
+    }
   } else {
     res.status(400).json({ success: false, message: 'Invalid signature' });
   }
@@ -137,7 +179,7 @@ app.post('/api/checkout/create-order', async (req, res) => {
   const { amount } = req.body;
   try {
     const options = {
-      amount: amount * 100, // amount in the smallest currency unit
+      amount: amount * 100,
       currency: "INR",
       receipt: `receipt_checkout_${Date.now()}`,
     };
@@ -150,13 +192,21 @@ app.post('/api/checkout/create-order', async (req, res) => {
 
 // Verify Checkout Payment
 app.post('/api/checkout/verify-payment', async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
 
   const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret');
   hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
   const generated_signature = hmac.digest('hex');
 
   if (generated_signature === razorpay_signature) {
+    if (isMongoConnected) {
+      let wallet = await Wallet.findOne();
+      if (!wallet) wallet = new Wallet({ balance: 0 });
+      wallet.transactions.push({ amount: Number(amount) || 0, type: 'purchase', status: 'success' });
+      await wallet.save();
+    } else {
+      inMemoryWallet.transactions.push({ amount: Number(amount) || 0, type: 'purchase', status: 'success', date: new Date() });
+    }
     res.json({ success: true, message: 'Payment verified successfully' });
   } else {
     res.status(400).json({ success: false, message: 'Invalid signature' });
@@ -167,9 +217,16 @@ app.post('/api/checkout/verify-payment', async (req, res) => {
 app.get('/api/products', async (req, res) => {
   const { category } = req.query;
   try {
-    const filter = category ? { category } : {};
-    const products = await Product.find(filter);
-    res.json(products);
+    if (isMongoConnected) {
+      const filter = category ? { category } : {};
+      const products = await Product.find(filter);
+      res.json(products);
+    } else {
+      const products = category
+        ? inMemoryProducts.filter(p => p.category === category)
+        : inMemoryProducts;
+      res.json(products);
+    }
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch products' });
   }
@@ -180,18 +237,91 @@ app.post('/api/products', async (req, res) => {
   const { name, category, price, mrp, description, sellerName } = req.body;
   if (!name || !category || !price) return res.status(400).json({ error: 'Required fields missing' });
   try {
-    const product = new Product({ name, category, price, mrp, description, sellerName });
-    await product.save();
-    res.status(201).json(product);
+    if (isMongoConnected) {
+      const product = new Product({ name, category, price, mrp, description, sellerName });
+      await product.save();
+      res.status(201).json(product);
+    } else {
+      const product = {
+        _id: `m_${Date.now()}`,
+        name,
+        category,
+        price: Number(price),
+        mrp: Number(mrp) || Math.round(Number(price) * 1.3),
+        description,
+        sellerName: sellerName || 'Anonymous Seller',
+        rating: 0,
+        reviews: 0,
+        createdAt: new Date().toISOString()
+      };
+      inMemoryProducts.push(product);
+      res.status(201).json(product);
+    }
   } catch (err) { res.status(500).json({ error: 'Failed to add product' }); }
 });
 
 // DELETE a product
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Product deleted' });
+    if (isMongoConnected) {
+      await Product.findByIdAndDelete(req.params.id);
+      res.json({ message: 'Product deleted' });
+    } else {
+      inMemoryProducts = inMemoryProducts.filter(p => p._id !== req.params.id);
+      res.json({ message: 'Product deleted' });
+    }
   } catch (err) { res.status(500).json({ error: 'Delete failed' }); }
+});
+
+// GET admin stats
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const productCount = await Product.countDocuments();
+      const wallet = await Wallet.findOne();
+      const totalRevenue = wallet
+        ? wallet.transactions
+            .filter(t => t.type === 'purchase' && t.status === 'success')
+            .reduce((sum, t) => sum + (t.amount || 0), 0)
+        : 0;
+      const uniqueSellers = await Product.distinct('sellerName');
+      res.json({
+        productCount,
+        totalRevenue,
+        sellerCount: uniqueSellers.length,
+        storeCount: uniqueSellers.length,
+      });
+    } else {
+      const productCount = inMemoryProducts.length;
+      const totalRevenue = inMemoryWallet.transactions
+        .filter(t => t.type === 'purchase' && t.status === 'success')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      const uniqueSellers = Array.from(new Set(inMemoryProducts.map(p => p.sellerName)));
+      res.json({
+        productCount,
+        totalRevenue,
+        sellerCount: uniqueSellers.length,
+        storeCount: uniqueSellers.length,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch admin stats' });
+  }
+});
+
+// GET seller stats
+app.get('/api/seller/stats', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const productCount = await Product.countDocuments();
+      res.json({ productCount, activeOrders: 0, totalSales: 0 });
+    } else {
+      const productCount = inMemoryProducts.length;
+      res.json({ productCount, activeOrders: 0, totalSales: 0 });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch seller stats' });
+  }
 });
 
 // Health check
@@ -202,3 +332,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+

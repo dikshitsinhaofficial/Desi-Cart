@@ -4,15 +4,23 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, IndianRupee, Loader2, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
+import API from "../../lib/api";
 
 interface TopUpModalProps {
   onClose: () => void;
   onSuccess: (balance: number) => void;
 }
 
+// Typed Razorpay response — replaces `any`
+interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: object) => { open: () => void };
   }
 }
 
@@ -23,11 +31,11 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
 
   const handleTopUp = async () => {
     if (!amount || isNaN(Number(amount))) return;
-    
+
     setLoading(true);
     try {
       // 1. Create Order in Backend
-      const orderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/wallet/create-order`, {
+      const orderRes = await fetch(`${API}/api/wallet/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: Number(amount) }),
@@ -42,7 +50,7 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
 
       // 2. Open Razorpay Checkout
       const options = {
-        key: orderData.key_id || "rzp_test_placeholder", 
+        key: orderData.key_id || "rzp_test_placeholder",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Desi Cart Wallet",
@@ -66,16 +74,16 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
             preferences: { show_default_blocks: true },
           },
         },
-        handler: async function (response: any) {
+        handler: async (response: RazorpayResponse) => {
           // 3. Verify Payment
-          const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/wallet/verify-payment`, {
+          const verifyRes = await fetch(`${API}/api/wallet/verify-payment`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              amount: Number(amount)
+              amount: Number(amount),
             }),
           });
           const verifyData = await verifyRes.json();
@@ -86,7 +94,7 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
               particleCount: 150,
               spread: 70,
               origin: { y: 0.6 },
-              colors: ['#f97316', '#fbbf24', '#ffffff']
+              colors: ["#f97316", "#fbbf24", "#ffffff"],
             });
             setTimeout(() => {
               onSuccess(verifyData.balance);

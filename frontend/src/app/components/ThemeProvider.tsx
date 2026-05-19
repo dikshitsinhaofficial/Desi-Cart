@@ -40,7 +40,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 function ThemeToggleButton({ theme, toggle }: { theme: Theme; toggle: () => void }) {
   const isDark = theme === 'dark';
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed bottom-5 right-5 z-50">
       <button
         id="theme-toggle"
         onClick={toggle}

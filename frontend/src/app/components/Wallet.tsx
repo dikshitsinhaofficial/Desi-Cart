@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Wallet as WalletIcon, Plus, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TopUpModal from "./TopUpModal";
+import API from "../../lib/api";
 
 export default function Wallet() {
   const [balance, setBalance] = useState<number | null>(null);
@@ -12,7 +13,7 @@ export default function Wallet() {
 
   const fetchBalance = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/wallet`);
+      const res = await fetch(`${API}/api/wallet`);
       const data = await res.json();
       setBalance(data.balance);
     } catch (err) {
@@ -44,7 +45,7 @@ export default function Wallet() {
               <Loader2 size={14} className="animate-spin text-orange-500" />
             ) : (
               <span className="font-bold text-gray-800 dark:text-white">
-                ₹{balance?.toLocaleString()}
+                ₹{balance?.toLocaleString() ?? '0'}
               </span>
             )}
             <button

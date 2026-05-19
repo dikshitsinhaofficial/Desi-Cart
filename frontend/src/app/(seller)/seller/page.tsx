@@ -1,14 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import type { Metadata } from 'next';
+import API from '../../../lib/api';
 
 const CATEGORIES = ['Electronics', 'Fashion', 'Home', 'Books', 'Sports', 'Beauty', 'Toys', 'Daily Use'];
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-
+// ── Types ────────────────────────────────────────────────────────────────
 interface Product {
-  id: number;
+  _id: string;         // MongoDB ObjectId string — was wrongly typed as number before
   name: string;
   category: string;
   price: number;
@@ -18,12 +17,23 @@ interface Product {
   createdAt: string;
 }
 
+interface SellerStats {
+  productCount: number;
+  activeOrders: number;
+  totalSales: number;
+}
+
+type ActiveTab = 'dashboard' | 'add' | 'products';
+
 export default function SellerDashboard() {
   const [myProducts, setMyProducts] = useState<Product[]>([]);
-  const [form, setForm] = useState({ name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: 'My Store' });
+  const [stats, setStats] = useState<SellerStats>({ productCount: 0, activeOrders: 0, totalSales: 0 });
+  const [form, setForm] = useState({
+    name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: 'My Store',
+  });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'add' | 'products'>('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
@@ -40,7 +50,21 @@ export default function SellerDashboard() {
     }
   };
 
-  useEffect(() => { fetchMyProducts(); }, []);
+  // Fetch stats from backend
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`${API}/api/seller/stats`);
+      const data = await res.json();
+      setStats(data);
+    } catch {
+      // stats stay at 0 if backend is offline
+    }
+  };
+
+  useEffect(() => {
+    fetchMyProducts();
+    fetchStats();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +77,10 @@ export default function SellerDashboard() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error();
-      showToast('✅ Product added! It\'s now live in the shop.');
+      showToast("✅ Product added! It's now live in the shop.");
       setForm({ name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: form.sellerName });
       fetchMyProducts();
+      fetchStats();
       setActiveTab('products');
     } catch {
       showToast('Failed to add product', 'error');
@@ -64,20 +89,27 @@ export default function SellerDashboard() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    await fetch(`${API}/api/products/${id}`, { method: 'DELETE' });
-    showToast('Product removed');
-    fetchMyProducts();
+  // Fixed: now uses _id (string) instead of id (number)
+  const handleDelete = async (_id: string) => {
+    try {
+      await fetch(`${API}/api/products/${_id}`, { method: 'DELETE' });
+      showToast('Product removed');
+      fetchMyProducts();
+      fetchStats();
+    } catch {
+      showToast('Failed to remove product', 'error');
+    }
   };
 
-  const navItems = [
-    { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+  const navItems: { key: ActiveTab; label: string; icon: string }[] = [
+    { key: 'dashboard', label: 'Dashboard',   icon: '📊' },
     { key: 'add',       label: 'Add Product', icon: '➕' },
     { key: 'products',  label: 'My Products', icon: '📦' },
-  ] as const;
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex transition-colors duration-300">
+
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 shadow-md flex flex-col transition-colors duration-300">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col items-center">
@@ -113,9 +145,9 @@ export default function SellerDashboard() {
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">Welcome Back, Seller 👋</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {[
-                { label: 'Total Products', value: myProducts.length, color: 'text-blue-500' },
-                { label: 'Active Orders',  value: 0, color: 'text-green-500' },
-                { label: 'Total Sales',    value: '₹0.00', color: 'text-orange-500' },
+                { label: 'Total Products', value: myProducts.length,                    color: 'text-blue-500' },
+                { label: 'Active Orders',  value: stats.activeOrders,                   color: 'text-green-500' },
+                { label: 'Total Sales',    value: `₹${stats.totalSales.toFixed(2)}`,    color: 'text-orange-500' },
               ].map(card => (
                 <div key={card.label} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow transition-colors duration-300">
                   <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{card.label}</p>
@@ -126,7 +158,8 @@ export default function SellerDashboard() {
             <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-6">
               <h3 className="font-semibold text-orange-700 dark:text-orange-400 mb-1">💡 Quick Start</h3>
               <p className="text-sm text-orange-600 dark:text-orange-300">
-                Click <strong>Add Product</strong> in the sidebar to list your first product. Choose a category like Electronics, Fashion, or Daily Use — it will instantly appear in the customer shop!
+                Click <strong>Add Product</strong> in the sidebar to list your first product. Choose a category like
+                Electronics, Fashion, or Daily Use — it will instantly appear in the customer shop!
               </p>
             </div>
           </div>
@@ -234,18 +267,18 @@ export default function SellerDashboard() {
               <div className="text-center py-20 text-gray-400">
                 <div className="text-6xl mb-4">📦</div>
                 <p className="text-xl mb-2">No products yet</p>
-                <p className="text-sm">Click "Add Product" to list your first item</p>
+                <p className="text-sm">Click &quot;Add Product&quot; to list your first item</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {myProducts.map(p => (
-                  <div key={p.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+                  <div key={p._id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
                     <div className="flex items-start justify-between mb-2">
                       <span className="text-xs bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium">
                         {p.category}
                       </span>
                       <button
-                        onClick={() => handleDelete(p.id)}
+                        onClick={() => handleDelete(p._id)}
                         className="text-red-400 hover:text-red-600 text-xs transition-colors"
                       >
                         🗑 Remove
