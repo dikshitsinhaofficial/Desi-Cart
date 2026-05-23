@@ -25,6 +25,10 @@ export default function Wallet() {
 
   useEffect(() => {
     fetchBalance();
+    window.addEventListener("wallet-update", fetchBalance);
+    return () => {
+      window.removeEventListener("wallet-update", fetchBalance);
+    };
   }, []);
 
   return (

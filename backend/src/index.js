@@ -213,6 +213,53 @@ app.post('/api/checkout/verify-payment', async (req, res) => {
   }
 });
 
+// Pay with Wallet Route
+app.post('/api/checkout/pay-with-wallet', async (req, res) => {
+  const { amount } = req.body;
+  if (!amount || isNaN(Number(amount))) {
+    return res.status(400).json({ success: false, message: 'Invalid amount' });
+  }
+  try {
+    if (isMongoConnected) {
+      let wallet = await Wallet.findOne();
+      if (!wallet) {
+        wallet = new Wallet({ balance: 0 });
+        await wallet.save();
+      }
+
+      if (wallet.balance < Number(amount)) {
+        return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+      }
+
+      wallet.balance -= Number(amount);
+      wallet.transactions.push({
+        amount: Number(amount),
+        type: 'purchase',
+        status: 'success',
+        date: new Date()
+      });
+      await wallet.save();
+      res.json({ success: true, balance: wallet.balance, message: 'Payment successful using wallet!' });
+    } else {
+      if (inMemoryWallet.balance < Number(amount)) {
+        return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+      }
+
+      inMemoryWallet.balance -= Number(amount);
+      inMemoryWallet.transactions.push({
+        amount: Number(amount),
+        type: 'purchase',
+        status: 'success',
+        date: new Date()
+      });
+      res.json({ success: true, balance: inMemoryWallet.balance, message: 'Payment successful using wallet!' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to process wallet payment' });
+  }
+});
+
+
 // GET all products
 app.get('/api/products', async (req, res) => {
   const { category } = req.query;
