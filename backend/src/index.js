@@ -28,20 +28,190 @@ let inMemoryWallet = {
   transactions: []
 };
 
-const seedInMemory = () => {
-  inMemoryProducts = [
-    { _id: "m1", name: "Men's Cotton Casual Shirt", category: "Fashion", price: 899, mrp: 1499, description: "Comfortable pure cotton shirt for daily wear.", sellerName: "Dhanraj", rating: 4.2, reviews: 120 },
-    { _id: "m2", name: "Women's Floral Summer Dress", category: "Fashion", price: 1299, mrp: 2499, description: "Breezy floral dress perfect for summer outings.", sellerName: "Dhanraj", rating: 4.5, reviews: 340 },
-    { _id: "m3", name: "Unisex Denim Jacket", category: "Fashion", price: 1999, mrp: 3999, description: "Classic blue denim jacket with a modern fit.", sellerName: "Dhanraj", rating: 4.7, reviews: 890 },
-    { _id: "m4", name: "Men's Slim Fit Chinos", category: "Fashion", price: 1099, mrp: 1999, description: "Stretchable slim fit chinos for office and casual wear.", sellerName: "Dhanraj", rating: 4.1, reviews: 45 },
-    { _id: "m5", name: "Women's Ethnic Kurti", category: "Fashion", price: 799, mrp: 1299, description: "Beautiful printed kurti with traditional motifs.", sellerName: "Dhanraj", rating: 4.4, reviews: 210 },
-    { _id: "m6", name: "Men's Sports T-Shirt", category: "Fashion", price: 499, mrp: 999, description: "Dry-fit activewear t-shirt for workouts.", sellerName: "Dhanraj", rating: 4.6, reviews: 560 },
-    { _id: "m7", name: "Women's High-Waist Jeans", category: "Fashion", price: 1499, mrp: 2999, description: "Trendy high-waist denim jeans with a flattering fit.", sellerName: "Dhanraj", rating: 4.3, reviews: 150 },
-    { _id: "m8", name: "Unisex Winter Hoodie", category: "Fashion", price: 1199, mrp: 2499, description: "Warm and cozy fleece hoodie with front pocket.", sellerName: "Dhanraj", rating: 4.8, reviews: 1020 },
-    { _id: "m9", name: "Men's Formal Trousers", category: "Fashion", price: 1299, mrp: 2199, description: "Premium fabric formal trousers for business wear.", sellerName: "Dhanraj", rating: 4.2, reviews: 85 },
-    { _id: "m10", name: "Women's Silk Saree", category: "Fashion", price: 3499, mrp: 5999, description: "Elegant silk saree with intricate zari border.", sellerName: "Dhanraj", rating: 4.9, reviews: 430 }
+// ── Dynamic Product Generator ──
+const generateProductsForCategory = (category, count) => {
+  const products = [];
+  
+  const electronicsNames = [
+    { name: "Wireless Earbuds", basePrice: 1299 },
+    { name: "Smart Fitness Watch", basePrice: 2499 },
+    { name: "Fast Charging Power Bank", basePrice: 999 },
+    { name: "Portable Bluetooth Speaker", basePrice: 1499 },
+    { name: "Ergonomic Mechanical Keyboard", basePrice: 3499 },
+    { name: "Gaming Optical Mouse", basePrice: 899 },
+    { name: "Type-C Multiport Adapter USB Hub", basePrice: 1199 },
+    { name: "ANC Noise Cancelling Headphones", basePrice: 4999 },
+    { name: "Ring Light with Tripod Stand", basePrice: 799 },
+    { name: "Adjustable Laptop Cooling Pad", basePrice: 1099 },
+    { name: "Smart LED Bulb 9W", basePrice: 399 },
+    { name: "Full HD Webcam with Mic", basePrice: 1999 },
+    { name: "Hard Drive External 1TB HDD", basePrice: 3999 },
+    { name: "Solid State Drive SSD 500GB", basePrice: 4599 },
+    { name: "Dual-Band Wi-Fi Router", basePrice: 1899 },
+    { name: "Wireless Charging Dock", basePrice: 1599 },
+    { name: "Digital Voice Recorder Pen", basePrice: 1299 },
+    { name: "Mini Projector 1080p Support", basePrice: 6999 },
+    { name: "Grafix Drawing Graphic Tablet", basePrice: 5999 },
+    { name: "Smart Plug Wi-Fi Enabled", basePrice: 699 }
   ];
-  console.log('In-memory database seeded with initial products.');
+
+  const fitnessNames = [
+    { name: "Non-Slip TPE Yoga Mat", basePrice: 699 },
+    { name: "Adjustable Dumbbells Pair", basePrice: 2999 },
+    { name: "Latex Resistance Bands Set", basePrice: 499 },
+    { name: "Cast Iron Kettlebell 8kg", basePrice: 1299 },
+    { name: "Digital Jump Skip Rope", basePrice: 299 },
+    { name: "High-Density Foam Roller", basePrice: 599 },
+    { name: "Anti-Burst Gym Fitness Ball", basePrice: 799 },
+    { name: "Heavy Duty Push-Up Bars", basePrice: 449 },
+    { name: "Double Wheel Ab Roller", basePrice: 399 },
+    { name: "Padded Gym Gloves for Lifting", basePrice: 349 },
+    { name: "Insulated Sports Water Bottle", basePrice: 599 },
+    { name: "Hand Grip Strengthener", basePrice: 199 },
+    { name: "Fabric Loop Exercise Bands", basePrice: 399 },
+    { name: "Ankle Weighted Straps", basePrice: 499 },
+    { name: "Foldable Exercise Bench", basePrice: 5499 },
+    { name: "Agility Ladder with Cones", basePrice: 699 },
+    { name: "Muscle Massage Gun", basePrice: 2499 },
+    { name: "Doorway Pull-Up Chin-Up Bar", basePrice: 1199 },
+    { name: "Under-Desk Walking Pad Treadmill", basePrice: 14999 },
+    { name: "Weighted Workout Vest 10kg", basePrice: 2199 }
+  ];
+
+  const groceriesNames = [
+    { name: "Premium Basmati Rice", basePrice: 149 },
+    { name: "Organic Whole Wheat Atta", basePrice: 280 },
+    { name: "Split Toor Dal (Arhar)", basePrice: 160 },
+    { name: "Cold Pressed Mustard Oil", basePrice: 199 },
+    { name: "Pure Cow Ghee Jar", basePrice: 650 },
+    { name: "Organic Turmeric Powder", basePrice: 75 },
+    { name: "Kashmiri Red Chili Powder", basePrice: 99 },
+    { name: "Premium Garam Masala Blend", basePrice: 85 },
+    { name: "Raw Unfiltered Honey", basePrice: 299 },
+    { name: "California Almonds Value Pack", basePrice: 399 },
+    { name: "Whole Cashew Nuts (Kaju)", basePrice: 450 },
+    { name: "Organic Jaggery Powder (Gur)", basePrice: 90 },
+    { name: "Pistachios Roasted & Salted", basePrice: 420 },
+    { name: "Green Cardamom (Elaichi)", basePrice: 180 },
+    { name: "Cloves Whole Spice (Laung)", basePrice: 110 },
+    { name: "Premium Tea Leaves Assam", basePrice: 249 },
+    { name: "Filter Coffee Powder Blend", basePrice: 280 },
+    { name: "Himalayan Pink Salt Fine", basePrice: 65 },
+    { name: "Organic Brown Sugar", basePrice: 120 },
+    { name: "Saffron Threads Kesar (1g)", basePrice: 350 }
+  ];
+
+  const foodNames = [
+    { name: "Masala Potato Chips Crunchy", basePrice: 40 },
+    { name: "Roasted Makhana Herbs & Spices", basePrice: 120 },
+    { name: "Double Choco Chip Cookies", basePrice: 99 },
+    { name: "Instant Poha Ready Mix", basePrice: 60 },
+    { name: "Diet Methi Khakhra Crispy", basePrice: 85 },
+    { name: "Crunchy Peanut Chikki Bars", basePrice: 75 },
+    { name: "Assorted Mithai Sweets Box", basePrice: 499 },
+    { name: "Spicy Baked Bhujia Sev", basePrice: 45 },
+    { name: "Mango Pickle Homemade Style", basePrice: 140 },
+    { name: "Mixed Fruit Jam Spread", basePrice: 115 },
+    { name: "Salted Roasted Peanuts Pack", basePrice: 50 },
+    { name: "Instant Oats Tomato Masala", basePrice: 130 },
+    { name: "Veg Hakka Noodles Kit", basePrice: 95 },
+    { name: "Dark Chocolate Premium Bar", basePrice: 150 },
+    { name: "Sweet Corn Soup Instant", basePrice: 45 },
+    { name: "Tomato Ketchup Squeezy Bottle", basePrice: 120 },
+    { name: "Ready-to-Eat Dal Makhani", basePrice: 110 },
+    { name: "Ready-to-Eat Paneer Butter Masala", basePrice: 140 },
+    { name: "Premium Popcorn Kernel Pack", basePrice: 65 },
+    { name: "Crispy Soya Sticks Snack", basePrice: 55 }
+  ];
+
+  const clothingNames = [
+    { name: "Classic Cotton Kurta Men", basePrice: 699 },
+    { name: "Comfort Fit Crewneck T-Shirt", basePrice: 399 },
+    { name: "Stretchable Slim Fit Chinos", basePrice: 1299 },
+    { name: "Classic Indigo Denim Jacket", basePrice: 1899 },
+    { name: "Breezy Linen Casual Shirt", basePrice: 999 },
+    { name: "Traditional Silk Saree Elegant", basePrice: 2499 },
+    { name: "Printed Floral Summer Dress", basePrice: 1199 },
+    { name: "Active Dry-Fit Sports T-Shirt", basePrice: 499 },
+    { name: "High-Waist Stretch Denim Jeans", basePrice: 1499 },
+    { name: "Casual Fleece Pullover Hoodie", basePrice: 1099 },
+    { name: "Premium Silk Dupatta Scarves", basePrice: 599 },
+    { name: "Slim Fit Formal Cotton Trousers", basePrice: 1199 },
+    { name: "Comfortable Joggers Track Pants", basePrice: 799 },
+    { name: "Cargo Utility Pants 6-Pocket", basePrice: 1399 },
+    { name: "Solid Polo Shirt Collar Neck", basePrice: 599 },
+    { name: "Casual Denim Shorts Rugged", basePrice: 699 },
+    { name: "Georgette Floral Printed Kurti", basePrice: 899 },
+    { name: "Woolen Blend Knit Winter Sweater", basePrice: 1299 },
+    { name: "Unisex Cotton Socks Pack of 5", basePrice: 299 },
+    { name: "Classic Leather Belt Formal", basePrice: 499 }
+  ];
+
+  let itemsPool = [];
+  if (category === "Electronics") itemsPool = electronicsNames;
+  else if (category === "Fitness") itemsPool = fitnessNames;
+  else if (category === "Groceries") itemsPool = groceriesNames;
+  else if (category === "Food") itemsPool = foodNames;
+  else if (category === "Clothing") itemsPool = clothingNames;
+
+  const brands = ["Bharat", "Desi", "Vedic", "Royal", "Indi", "Classic", "Premium", "Heritage", "Elite", "Urban"];
+  const descriptions = [
+    "High quality authentic product designed for daily use and durability.",
+    "Made with premium materials. Specially curated for our valued customers.",
+    "Experience the comfort and reliability of this handcrafted select item.",
+    "Top rated product featuring advanced craftsmanship and standard specifications.",
+    "Brought to you by top local sellers. Trusted by thousands of happy customers.",
+    "Perfect choice for modern lifestyle. Safe, eco-friendly, and highly efficient."
+  ];
+  
+  const sellers = ["Dhanraj", "Vedic Stores", "Bharat Traders", "IndiRetail", "Swadeshi Co.", "Aura Sellers"];
+
+  for (let i = 0; i < count; i++) {
+    const baseItem = itemsPool[i % itemsPool.length];
+    const brand = brands[Math.floor((i * 7 + 13) % brands.length)];
+    const desc = descriptions[Math.floor((i * 11 + 3) % descriptions.length)];
+    const seller = sellers[Math.floor((i * 3 + 2) % sellers.length)];
+    
+    const variationMultiplier = 0.9 + ((i * 17) % 21) * 0.01;
+    const price = Math.round(baseItem.basePrice * variationMultiplier);
+    const mrp = Math.round(price * (1.2 + ((i * 13) % 4) * 0.1));
+    const rating = parseFloat((4.0 + ((i * 9) % 11) * 0.1).toFixed(1));
+    const reviews = Math.round(15 + (i * 23) % 850);
+    
+    const numStr = (i + 1).toString().padStart(3, '0');
+    const name = `${brand} ${baseItem.name} v${numStr}`;
+    
+    products.push({
+      name,
+      category,
+      price,
+      mrp,
+      description: `${desc} Features unique specifications and reliable build.`,
+      sellerName: seller,
+      rating,
+      reviews
+    });
+  }
+
+  return products;
+};
+
+const generateAllSeedProducts = () => {
+  const categories = ["Electronics", "Fitness", "Groceries", "Food", "Clothing"];
+  let all = [];
+  categories.forEach(cat => {
+    all = all.concat(generateProductsForCategory(cat, 100));
+  });
+  return all;
+};
+
+const seedInMemory = () => {
+  const seedItems = generateAllSeedProducts();
+  inMemoryProducts = seedItems.map((p, idx) => ({
+    _id: `m_${idx + 1}`,
+    ...p
+  }));
+  console.log(`In-memory database seeded with ${inMemoryProducts.length} initial products.`);
 };
 
 seedInMemory();
@@ -88,23 +258,11 @@ const Wallet = mongoose.model('Wallet', walletSchema);
 // ── Seeding Logic ──
 const seedDatabase = async () => {
   try {
-    const count = await Product.countDocuments();
-    if (count === 0) {
-      const initialProducts = [
-        { name: "Men's Cotton Casual Shirt", category: "Fashion", price: 899, mrp: 1499, description: "Comfortable pure cotton shirt for daily wear.", sellerName: "Dhanraj", rating: 4.2, reviews: 120 },
-        { name: "Women's Floral Summer Dress", category: "Fashion", price: 1299, mrp: 2499, description: "Breezy floral dress perfect for summer outings.", sellerName: "Dhanraj", rating: 4.5, reviews: 340 },
-        { name: "Unisex Denim Jacket", category: "Fashion", price: 1999, mrp: 3999, description: "Classic blue denim jacket with a modern fit.", sellerName: "Dhanraj", rating: 4.7, reviews: 890 },
-        { name: "Men's Slim Fit Chinos", category: "Fashion", price: 1099, mrp: 1999, description: "Stretchable slim fit chinos for office and casual wear.", sellerName: "Dhanraj", rating: 4.1, reviews: 45 },
-        { name: "Women's Ethnic Kurti", category: "Fashion", price: 799, mrp: 1299, description: "Beautiful printed kurti with traditional motifs.", sellerName: "Dhanraj", rating: 4.4, reviews: 210 },
-        { name: "Men's Sports T-Shirt", category: "Fashion", price: 499, mrp: 999, description: "Dry-fit activewear t-shirt for workouts.", sellerName: "Dhanraj", rating: 4.6, reviews: 560 },
-        { name: "Women's High-Waist Jeans", category: "Fashion", price: 1499, mrp: 2999, description: "Trendy high-waist denim jeans with a flattering fit.", sellerName: "Dhanraj", rating: 4.3, reviews: 150 },
-        { name: "Unisex Winter Hoodie", category: "Fashion", price: 1199, mrp: 2499, description: "Warm and cozy fleece hoodie with front pocket.", sellerName: "Dhanraj", rating: 4.8, reviews: 1020 },
-        { name: "Men's Formal Trousers", category: "Fashion", price: 1299, mrp: 2199, description: "Premium fabric formal trousers for business wear.", sellerName: "Dhanraj", rating: 4.2, reviews: 85 },
-        { name: "Women's Silk Saree", category: "Fashion", price: 3499, mrp: 5999, description: "Elegant silk saree with intricate zari border.", sellerName: "Dhanraj", rating: 4.9, reviews: 430 }
-      ];
-      await Product.insertMany(initialProducts);
-      console.log('Database seeded with initial products.');
-    }
+    // Delete existing products to ensure a clean seed of requested categories
+    await Product.deleteMany({});
+    const seedItems = generateAllSeedProducts();
+    await Product.insertMany(seedItems);
+    console.log(`Database seeded with ${seedItems.length} products successfully.`);
   } catch (err) {
     console.error('Error seeding database:', err);
   }

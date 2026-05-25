@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import API from '../../../lib/api';
 
-const CATEGORIES = ['Electronics', 'Fashion', 'Home', 'Books', 'Sports', 'Beauty', 'Toys', 'Daily Use'];
+const CATEGORIES = ['Electronics', 'Fitness', 'Groceries', 'Food', 'Clothing'];
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface Product {

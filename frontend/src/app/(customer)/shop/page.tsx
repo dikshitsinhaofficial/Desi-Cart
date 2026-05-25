@@ -52,38 +52,25 @@ interface RazorpayResponse {
 
 // ── Static data ────────────────────────────────────────────────────────────
 const EMOJI_MAP: Record<string, string> = {
-  Electronics: '📱', Fashion: '👕', Home: '🏠', Books: '📚',
-  Sports: '⚽', Beauty: '✨', Toys: '🧸', 'Daily Use': '🧴', default: '📦',
+  Electronics: '📱', Fitness: '🏋️‍♂️', Groceries: '🌾', Food: '🍲', Clothing: '👕', default: '📦',
 };
 
 const COLOR_MAP: Record<string, string> = {
-  Electronics: 'from-blue-500/20 to-indigo-600/20', Fashion: 'from-pink-400/20 to-rose-500/20',
-  Home: 'from-amber-400/20 to-orange-500/20', Books: 'from-green-500/20 to-teal-500/20',
-  Sports: 'from-lime-500/20 to-green-600/20', Beauty: 'from-purple-400/20 to-pink-500/20',
-  Toys: 'from-red-400/20 to-orange-500/20', 'Daily Use': 'from-sky-400/20 to-blue-500/20',
-  default: 'from-gray-500/20 to-gray-700/20',
+  Electronics: 'from-blue-500/20 to-indigo-600/20', Fitness: 'from-teal-400/20 to-emerald-600/20',
+  Groceries: 'from-green-400/20 to-emerald-500/20', Food: 'from-amber-400/20 to-yellow-500/20',
+  Clothing: 'from-pink-400/20 to-rose-500/20', default: 'from-gray-500/20 to-gray-700/20',
 };
 
 const STATIC_PRODUCTS: ShopProduct[] = [
-  { uid: 's1',  name: 'Wireless Earbuds Pro',   category: 'Electronics', price: 1299, mrp: 2999, rating: 4.3, reviews: 2341, image: '/images/earbuds.png',   color: 'from-purple-500 to-blue-500',    badge: 'Best Seller' },
-  { uid: 's2',  name: 'Cotton Kurta Set',        category: 'Fashion',     price: 799,  mrp: 1499, rating: 4.1, reviews: 876,  image: '/images/kurta.png',    color: 'from-orange-400 to-pink-500',   badge: '' },
-  { uid: 's3',  name: 'Smart LED Bulb Pack',     category: 'Home',        price: 449,  mrp: 899,  rating: 4.5, reviews: 5678, image: '/images/bulb.png',     color: 'from-yellow-400 to-orange-400', badge: 'Deal of Day' },
-  { uid: 's4',  name: 'Python Programming Book', category: 'Books',       price: 349,  mrp: 699,  rating: 4.7, reviews: 1234, image: '/images/book.png',     color: 'from-green-500 to-teal-500',    badge: '' },
-  { uid: 's5',  name: 'Bluetooth Speaker Mini',  category: 'Electronics', price: 999,  mrp: 1999, rating: 4.2, reviews: 3412, image: '/images/speaker.png', color: 'from-blue-600 to-indigo-600',   badge: 'Top Rated' },
-  { uid: 's6',  name: 'Yoga Mat Premium',        category: 'Sports',      price: 599,  mrp: 1199, rating: 4.4, reviews: 987,  image: '/images/yoga.png',    color: 'from-teal-400 to-cyan-500',     badge: '' },
-  { uid: 's7',  name: 'Face Serum Vitamin C',    category: 'Beauty',      price: 499,  mrp: 999,  rating: 4.6, reviews: 4567, image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400', color: 'from-pink-400 to-rose-500', badge: 'New' },
-  { uid: 's8',  name: 'LEGO Building Set',       category: 'Toys',        price: 1499, mrp: 2499, rating: 4.8, reviews: 2109, image: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400', color: 'from-red-400 to-orange-500', badge: "Kids' Choice" },
-  { uid: 's9',  name: 'Mechanical Keyboard',     category: 'Electronics', price: 2499, mrp: 4999, rating: 4.5, reviews: 1876, image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=400', color: 'from-gray-600 to-gray-800', badge: '' },
-  { uid: 's10', name: 'Ethnic Saree Cotton',     category: 'Fashion',     price: 1299, mrp: 2499, rating: 4.3, reviews: 654,  image: 'https://images.unsplash.com/photo-1610189013778-591db30efca6?w=400', color: 'from-amber-500 to-yellow-500', badge: '' },
-  { uid: 's11', name: 'Air Fryer 4L',            category: 'Home',        price: 3499, mrp: 5999, rating: 4.6, reviews: 3210, image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400', color: 'from-slate-500 to-gray-600', badge: 'Best Seller' },
-  { uid: 's12', name: 'Cricket Bat Kashmir',     category: 'Sports',      price: 899,  mrp: 1799, rating: 4.2, reviews: 432,  image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=400', color: 'from-lime-500 to-green-600', badge: '' },
-  { uid: 's13', name: 'Moisturizer SPF 50',      category: 'Beauty',      price: 299,  mrp: 599,  rating: 4.4, reviews: 7890, image: 'https://images.unsplash.com/photo-1617897903246-719242758050?w=400', color: 'from-sky-400 to-blue-500', badge: 'Popular' },
-  { uid: 's14', name: 'Story Books Bundle',      category: 'Books',       price: 499,  mrp: 999,  rating: 4.5, reviews: 876,  image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400', color: 'from-violet-500 to-purple-600', badge: '' },
-  { uid: 's15', name: 'USB-C Hub 7-in-1',        category: 'Electronics', price: 1799, mrp: 3499, rating: 4.3, reviews: 2345, image: 'https://images.unsplash.com/photo-1647414907153-6ce8bd0558b3?w=400', color: 'from-cyan-500 to-blue-600', badge: '' },
-  { uid: 's16', name: 'Resistance Band Set',     category: 'Sports',      price: 399,  mrp: 799,  rating: 4.1, reviews: 1234, image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=400', color: 'from-emerald-500 to-green-500', badge: 'New' },
+  { uid: 's1',  name: 'DesiTech Wireless Earbuds Pro v1', category: 'Electronics', price: 1299, mrp: 2999, rating: 4.3, reviews: 234, color: 'from-blue-500/20 to-indigo-600/20', badge: 'Best Seller' },
+  { uid: 's2',  name: 'BharatFit Non-Slip Yoga Mat v1', category: 'Fitness', price: 699, mrp: 1499, rating: 4.5, reviews: 128, color: 'from-teal-400/20 to-emerald-600/20', badge: 'Popular' },
+  { uid: 's3',  name: 'Pure Cow Ghee Jar v1', category: 'Groceries', price: 650, mrp: 899, rating: 4.7, reviews: 456, color: 'from-green-400/20 to-emerald-500/20', badge: 'Organic' },
+  { uid: 's4',  name: 'Masala Potato Chips Crunchy v1', category: 'Food', price: 40, mrp: 60, rating: 4.1, reviews: 789, color: 'from-amber-400/20 to-yellow-500/20', badge: 'Spicy' },
+  { uid: 's5',  name: 'Classic Cotton Kurta Men v1', category: 'Clothing', price: 699, mrp: 1299, rating: 4.4, reviews: 320, color: 'from-pink-400/20 to-rose-500/20', badge: 'Traditional' },
+  { uid: 's6',  name: 'Vedic Smart Fitness Watch v1', category: 'Fitness', price: 2499, mrp: 4999, rating: 4.6, reviews: 92, color: 'from-teal-400/20 to-emerald-600/20', badge: 'New Arrival' }
 ];
 
-const CATEGORIES = ['All', 'Electronics', 'Fashion', 'Home', 'Books', 'Sports', 'Beauty', 'Toys'];
+const CATEGORIES = ['All', 'Electronics', 'Fitness', 'Groceries', 'Food', 'Clothing'];
 const disc = (p: number, m: number) => Math.round((1 - p / m) * 100);
 
 export default function ShopPage() {
