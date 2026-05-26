@@ -94,14 +94,14 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
               particleCount: 150,
               spread: 70,
               origin: { y: 0.6 },
-              colors: ["#f97316", "#fbbf24", "#ffffff"],
+              colors: ["#7c3aed", "#06b6d4", "#fbbf24", "#ffffff"],
             });
             setTimeout(() => {
               onSuccess(verifyData.balance);
             }, 2000);
           }
         },
-        theme: { color: "#f97316" },
+        theme: { color: "#7c3aed" },
       };
 
       const rzp = new window.Razorpay(options);
@@ -160,7 +160,7 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="Enter amount (e.g. 500)"
-                    className="w-full bg-gray-100 dark:bg-gray-700/50 border-none rounded-2xl py-4 pl-12 pr-4 text-lg font-semibold focus:ring-2 focus:ring-orange-500 dark:text-white transition-all outline-none"
+                    className="w-full bg-gray-100 dark:bg-gray-700/50 border-none rounded-2xl py-4 pl-12 pr-4 text-lg font-semibold focus:ring-2 focus:ring-violet-500 dark:text-white transition-all outline-none"
                   />
                 </div>
 
@@ -169,7 +169,7 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
                     <button
                       key={amt}
                       onClick={() => setAmount(amt.toString())}
-                      className="py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 transition-all font-medium"
+                      className="py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-violet-500 hover:text-violet-500 transition-all font-medium"
                     >
                       +₹{amt}
                     </button>
@@ -179,7 +179,7 @@ export default function TopUpModal({ onClose, onSuccess }: TopUpModalProps) {
                 <button
                   onClick={handleTopUp}
                   disabled={loading || !amount}
-                  className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-violet-600 hover:bg-violet-750 disabled:bg-gray-400 text-white font-bold py-4 rounded-2xl shadow-lg shadow-violet-600/30 transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <Loader2 className="animate-spin" />

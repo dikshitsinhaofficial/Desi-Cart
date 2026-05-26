@@ -30,8 +30,8 @@ export default function CustomerHome() {
       <div className="absolute inset-0 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-[3px] z-10" />
 
       {/* ── Ambient Glow Elements ── */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-orange-500/20 rounded-full blur-[100px] z-10 animate-float-slow pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-red-500/20 rounded-full blur-[120px] z-10 animate-float-reverse pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-violet-500/20 rounded-full blur-[100px] z-10 animate-float-slow pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/20 rounded-full blur-[120px] z-10 animate-float-reverse pointer-events-none" />
 
       {/* ── Main Hero Card ── */}
       <main className="relative z-20 max-w-xl w-full mx-4 text-center">
@@ -54,7 +54,7 @@ export default function CustomerHome() {
           {/* Heading */}
           <div className="space-y-3">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-              Experience the Best of <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-rose-400 bg-clip-text text-transparent">Desi Shopping</span>
+              Experience the Best of <span className="bg-gradient-to-r from-violet-400 via-fuchsia-300 to-cyan-400 bg-clip-text text-transparent">Desi Shopping</span>
             </h1>
             <p className="text-slate-200 dark:text-slate-300 text-base md:text-lg max-w-md mx-auto font-medium">
               Discover, support, and shop authentic products curated from local sellers all across India.
@@ -65,7 +65,7 @@ export default function CustomerHome() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
             <Link
               href="/shop"
-              className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-bold rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/30 transition-all duration-300 active:scale-95 text-base"
+              className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white font-bold rounded-2xl shadow-xl shadow-violet-550/20 hover:shadow-violet-550/30 transition-all duration-300 active:scale-95 text-base"
             >
               <ShoppingBag size={20} className="group-hover:rotate-6 transition-transform" />
               Start Shopping

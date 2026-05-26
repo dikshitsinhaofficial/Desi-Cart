@@ -37,7 +37,7 @@ export default function Wallet() {
         whileHover={{ scale: 1.05 }}
         className="flex items-center gap-3 bg-white/10 dark:bg-gray-800/50 backdrop-blur-md border border-white/20 dark:border-gray-700 p-1.5 pr-4 rounded-full shadow-lg"
       >
-        <div className="bg-orange-500 p-2 rounded-full text-white shadow-inner">
+        <div className="bg-violet-650 p-2 rounded-full text-white shadow-inner">
           <WalletIcon size={18} />
         </div>
         <div className="flex flex-col">
@@ -46,7 +46,7 @@ export default function Wallet() {
           </span>
           <div className="flex items-center gap-2">
             {loading ? (
-              <Loader2 size={14} className="animate-spin text-orange-500" />
+              <Loader2 size={14} className="animate-spin text-violet-500" />
             ) : (
               <span className="font-bold text-gray-800 dark:text-white">
                 ₹{balance?.toLocaleString() ?? '0'}
@@ -54,7 +54,7 @@ export default function Wallet() {
             )}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-orange-500 hover:bg-orange-600 p-0.5 rounded-full text-white transition-colors"
+              className="bg-violet-600 hover:bg-violet-700 p-0.5 rounded-full text-white transition-colors"
             >
               <Plus size={14} />
             </button>

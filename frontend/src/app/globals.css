@@ -3,10 +3,10 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Modern warm off-white */
-  --background: #faf9f6;
-  /* Deep slate for text */
-  --foreground: #1e293b;
+  /* Modern warm off-white -> Lavender tint */
+  --background: #f8f7ff;
+  /* Deep slate for text -> deep indigo slate */
+  --foreground: #1a1a2e;
 }
 
 @theme inline {
@@ -18,10 +18,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Sleek, deep midnight blue */
-    --background: #0d1321;
-    /* Soft, readable light slate */
-    --foreground: #f8fafc;
+    /* Sleek, deep midnight blue -> Rich midnight */
+    --background: #0a0a1a;
+    /* Soft, readable light slate -> Soft lavender white */
+    --foreground: #f0f0ff;
   }
 }
 

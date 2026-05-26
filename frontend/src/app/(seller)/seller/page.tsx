@@ -123,7 +123,7 @@ export default function SellerDashboard() {
               onClick={() => setActiveTab(item.key)}
               className={`w-full text-left flex items-center gap-2 p-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === item.key
-                  ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+                  ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
@@ -147,7 +147,7 @@ export default function SellerDashboard() {
               {[
                 { label: 'Total Products', value: myProducts.length,                    color: 'text-blue-500' },
                 { label: 'Active Orders',  value: stats.activeOrders,                   color: 'text-green-500' },
-                { label: 'Total Sales',    value: `₹${stats.totalSales.toFixed(2)}`,    color: 'text-orange-500' },
+                { label: 'Total Sales',    value: `₹${stats.totalSales.toFixed(2)}`,    color: 'text-violet-500' },
               ].map(card => (
                 <div key={card.label} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow transition-colors duration-300">
                   <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{card.label}</p>
@@ -155,9 +155,9 @@ export default function SellerDashboard() {
                 </div>
               ))}
             </div>
-            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-6">
-              <h3 className="font-semibold text-orange-700 dark:text-orange-400 mb-1">💡 Quick Start</h3>
-              <p className="text-sm text-orange-600 dark:text-orange-300">
+            <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-6">
+              <h3 className="font-semibold text-violet-700 dark:text-violet-400 mb-1">💡 Quick Start</h3>
+              <p className="text-sm text-violet-600 dark:text-violet-300">
                 Click <strong>Add Product</strong> in the sidebar to list your first product. Choose a category like
                 Electronics, Fashion, or Daily Use — it will instantly appear in the customer shop!
               </p>
@@ -178,7 +178,7 @@ export default function SellerDashboard() {
                   placeholder="e.g. Samsung 65W Charger"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"
                 />
               </div>
 
@@ -187,7 +187,7 @@ export default function SellerDashboard() {
                 <select
                   value={form.category}
                   onChange={e => setForm({ ...form, category: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"
                 >
                   {CATEGORIES.map(c => <option key={c}>{c}</option>)}
                 </select>
@@ -202,7 +202,7 @@ export default function SellerDashboard() {
                     placeholder="999"
                     value={form.price}
                     onChange={e => setForm({ ...form, price: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"
                   />
                 </div>
                 <div>
@@ -212,7 +212,7 @@ export default function SellerDashboard() {
                     placeholder="1999"
                     value={form.mrp}
                     onChange={e => setForm({ ...form, mrp: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"
                   />
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function SellerDashboard() {
                   placeholder="Your store name"
                   value={form.sellerName}
                   onChange={e => setForm({ ...form, sellerName: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"
                 />
               </div>
 
@@ -235,14 +235,14 @@ export default function SellerDashboard() {
                   placeholder="Brief product description..."
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm resize-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm resize-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors duration-200"
+                className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors duration-200"
               >
                 {loading ? 'Publishing…' : '🚀 Publish Product to Shop'}
               </button>
@@ -257,7 +257,7 @@ export default function SellerDashboard() {
               <h1 className="text-3xl font-bold text-gray-800 dark:text-white">My Products 📦</h1>
               <button
                 onClick={() => setActiveTab('add')}
-                className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                className="bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
               >
                 + Add New
               </button>
@@ -274,7 +274,7 @@ export default function SellerDashboard() {
                 {myProducts.map(p => (
                   <div key={p._id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
                     <div className="flex items-start justify-between mb-2">
-                      <span className="text-xs bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full font-medium">
                         {p.category}
                       </span>
                       <button

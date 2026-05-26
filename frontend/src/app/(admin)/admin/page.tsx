@@ -55,7 +55,7 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab(item.key)}
               className={`w-full text-left flex items-center gap-2 p-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === item.key
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-violet-600 text-white'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -90,8 +90,8 @@ export default function AdminDashboard() {
                   label: 'Products Listed',
                   value: loading ? '…' : stats.productCount,
                   icon: '📦',
-                  color: 'text-blue-600 dark:text-blue-400',
-                  bg: 'bg-blue-50 dark:bg-blue-900/20',
+                  color: 'text-violet-600 dark:text-violet-400',
+                  bg: 'bg-violet-50 dark:bg-violet-900/20',
                 },
                 {
                   label: 'Active Sellers',
@@ -120,9 +120,9 @@ export default function AdminDashboard() {
             </div>
 
             {/* Quick info banner */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-              <h3 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">ℹ️ Admin Note</h3>
-              <p className="text-sm text-blue-600 dark:text-blue-300">
+            <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-6">
+              <h3 className="font-semibold text-violet-700 dark:text-violet-400 mb-1">ℹ️ Admin Note</h3>
+              <p className="text-sm text-violet-600 dark:text-violet-300">
                 Revenue reflects completed wallet top-up transactions. Seller and store counts are derived from
                 unique seller names registered in the product catalogue.
               </p>
