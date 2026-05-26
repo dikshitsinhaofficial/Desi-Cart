@@ -40,45 +40,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 function ThemeToggleButton({ theme, toggle }: { theme: Theme; toggle: () => void }) {
   const isDark = theme === 'dark';
   return (
-    <div className="fixed bottom-5 right-5 z-50">
+    <div className="fixed top-3 right-3 md:top-4 md:right-4 z-50">
       <button
         id="theme-toggle"
         onClick={toggle}
         aria-label="Toggle dark mode"
-        style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          background: isDark ? '#1f2937' : '#ffffff',
-          border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-          borderRadius: '9999px', padding: '6px 14px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          cursor: 'pointer', transition: 'all 0.2s',
-        }}
+        className="flex items-center justify-center p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/80 shadow-md hover:shadow-lg dark:shadow-slate-950/20 text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
       >
-        {/* Sun */}
-        <svg width="16" height="16" fill={isDark ? '#6b7280' : '#f59e0b'} viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-        </svg>
-
-        {/* Slider track */}
-        <div style={{
-          position: 'relative', width: '40px', height: '22px',
-          borderRadius: '9999px', background: isDark ? '#3b82f6' : '#d1d5db',
-          transition: 'background 0.3s',
-        }}>
-          <div style={{
-            position: 'absolute', top: '3px',
-            left: isDark ? '20px' : '3px',
-            width: '16px', height: '16px',
-            borderRadius: '9999px', background: '#ffffff',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-            transition: 'left 0.3s',
-          }} />
-        </div>
-
-        {/* Moon */}
-        <svg width="16" height="16" fill={isDark ? '#93c5fd' : '#9ca3af'} viewBox="0 0 20 20">
-          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-        </svg>
+        {isDark ? (
+          // Sun Icon
+          <svg className="w-5 h-5 text-amber-500 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+          </svg>
+        ) : (
+          // Moon Icon
+          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        )}
       </button>
     </div>
   );
