@@ -1,0 +1,45 @@
+[
+  {
+    "id": 1,
+    "name": "Smartphone XYZ",
+    "category": "Electronics",
+    "price": 299.99,
+    "image": "https://picsum.photos/seed/1/300/300"
+  },
+  {
+    "id": 2,
+    "name": "Wireless Headphones",
+    "category": "Electronics",
+    "price": 149.99,
+    "image": "https://picsum.photos/seed/2/300/300"
+  },
+  {
+    "id": 3,
+    "name": "Fitness Tracker Pro",
+    "category": "Gym",
+    "price": 89.99,
+    "image": "https://picsum.photos/seed/3/300/300"
+  },
+  {
+    "id": 4,
+    "name": "Yoga Mat Premium",
+    "category": "Gym",
+    "price": 39.99,
+    "image": "https://picsum.photos/seed/4/300/300"
+  },
+  {
+    "id": 5,
+    "name": "Men's Casual Shirt",
+    "category": "Clothes",
+    "price": 29.99,
+    "image": "https://picsum.photos/seed/5/300/300"
+  },
+  {
+    "id": 6,
+    "name": "Women's Denim Jeans",
+    "category": "Clothes",
+    "price": 49.99,
+    "image": "https://picsum.photos/seed/6/300/300"
+  }
+  // ... continue adding up to 60 items ...
+]
