@@ -1,4 +1,10 @@
 {
+  "name": "desi-cart",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+  },
   "dependencies": {
     "dotenv": "^17.4.2",
     "mongoose": "^9.6.2"
