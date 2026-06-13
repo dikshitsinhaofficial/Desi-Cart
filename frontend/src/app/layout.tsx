@@ -9,13 +9,13 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Desi Cart",
-  description: "Discover amazing products from local sellers across India.",
+  title: "Desi Cart — Shop India's Best",
+  description: "Discover amazing products from local sellers across India. Electronics, fitness, groceries, clothing & more.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}> 
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
       </head>
@@ -28,18 +28,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 DesiCart
               </Link>
               <ul className="flex space-x-4 text-sm">
-                <li><Link href="#electronics" className="hover:text-primary">Electronics</Link></li>
-                <li><Link href="#gym" className="hover:text-primary">Gym</Link></li>
-                <li><Link href="#clothing" className="hover:text-primary">Clothing</Link></li>
-                <li><Link href="#food" className="hover:text-primary">Food</Link></li>
-                <li><Link href="#others" className="hover:text-primary">Others</Link></li>
+                <li><Link href="/shop" className="hover:text-primary font-medium">Shop</Link></li>
+                <li><Link href="/shop" className="hover:text-primary">Electronics</Link></li>
+                <li><Link href="/shop" className="hover:text-primary">Fitness</Link></li>
+                <li><Link href="/shop" className="hover:text-primary">Groceries</Link></li>
+                <li><Link href="/shop" className="hover:text-primary">Clothing</Link></li>
               </ul>
             </nav>
           </header>
-          <main className="flex-1 container mx-auto px-4 py-6">
+
+          {/* Main — full width so hero can bleed edge-to-edge */}
+          <main className="flex-1">
             {children}
           </main>
-          <footer className="bg-gray-100 dark:bg-gray-800 py-4 text-center text-sm">
+
+          <footer className="bg-gray-100 dark:bg-gray-800 py-4 text-center text-sm text-gray-500">
             © {new Date().getFullYear()} DesiCart. All rights reserved.
           </footer>
         </ThemeProvider>
