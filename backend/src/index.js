@@ -152,13 +152,23 @@ const generateProductsForCategory = (category, count) => {
   ];
 
   let itemsPool = [];
-  if (category === "Electronics") itemsPool = electronicsNames;
-  else if (category === "Fitness") itemsPool = fitnessNames;
-  else if (category === "Groceries") itemsPool = groceriesNames;
-  else if (category === "Food") itemsPool = foodNames;
-  else if (category === "Clothing") itemsPool = clothingNames;
-
-  const brands = ["Bharat", "Desi", "Vedic", "Royal", "Indi", "Classic", "Premium", "Heritage", "Elite", "Urban"];
+  let brands = [];
+  if (category === "Electronics") {
+    itemsPool = electronicsNames;
+    brands = ["Apple", "Samsung", "Sony", "Bose", "JBL", "Dell", "HP", "Lenovo", "ASUS", "OnePlus"];
+  } else if (category === "Fitness") {
+    itemsPool = fitnessNames;
+    brands = ["Nike", "Adidas", "Puma", "Reebok", "Under Armour", "Decathlon", "Optimum Nutrition", "MuscleBlaze", "CultSport"];
+  } else if (category === "Groceries") {
+    itemsPool = groceriesNames;
+    brands = ["Tata Sampann", "Aashirvaad", "Fortune", "India Gate", "Daawat", "Saffola", "Everest", "MDH", "Catch"];
+  } else if (category === "Food") {
+    itemsPool = foodNames;
+    brands = ["Haldiram's", "Bikanervala", "Britannia", "Parle", "ITC Sunfeast", "Lay's", "Kurkure", "Cadbury", "Nestle"];
+  } else if (category === "Clothing") {
+    itemsPool = clothingNames;
+    brands = ["Levi's", "Zara", "H&M", "FabIndia", "Biba", "Manyavar", "Allen Solly", "Peter England", "Raymond"];
+  }
   const descriptions = [
     "High quality authentic product designed for daily use and durability.",
     "Made with premium materials. Specially curated for our valued customers.",
@@ -183,7 +193,8 @@ const generateProductsForCategory = (category, count) => {
     const reviews = Math.round(15 + (i * 23) % 850);
     
     const numStr = (i + 1).toString().padStart(3, '0');
-    const name = `${brand} ${baseItem.name} v${numStr}`;
+    // Using a more realistic naming convention for branded products
+    const name = `${brand} ${baseItem.name}`;
     
     products.push({
       name,
