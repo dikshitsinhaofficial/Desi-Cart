@@ -387,23 +387,18 @@ export default function ShopPage() {
 
   // ── Render ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative overflow-x-hidden font-sans">
       
       {/* ── Floating Glow Blobs (Background Aesthetic) ── */}
       <div className="absolute top-10 left-10 w-96 h-96 bg-orange-300/10 dark:bg-orange-950/20 rounded-full blur-[100px] pointer-events-none z-0 animate-float-slow" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-300/10 dark:bg-pink-950/10 rounded-full blur-[120px] pointer-events-none z-0 animate-float-reverse" />
 
-      {/* ── Navbar ── */}
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 dark:border-gray-800 transition-colors shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link href="/" className="shrink-0 flex items-center gap-2 hover:scale-102 transition-transform">
-            <div className="relative p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
-              <Image src="/logo.png" alt="Desi Cart" width={75} height={30} className="object-contain" priority />
-            </div>
-          </Link>
-
+      {/* ── Shop Toolbar ── */}
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 dark:border-gray-800 transition-colors shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+          
           {/* Search bar */}
-          <div className="flex flex-1 max-w-lg mx-2 md:mx-4 relative group">
+          <div className="flex w-full order-last md:order-none md:flex-1 md:max-w-lg relative group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-orange-500 transition-colors">
               <Search size={18} />
             </div>
@@ -416,7 +411,7 @@ export default function ShopPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full justify-between md:w-auto">
             {/* Wallet */}
             <Wallet />
 
@@ -437,10 +432,10 @@ export default function ShopPage() {
             </button>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* ── Category Strip ── */}
-      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 py-2 sticky top-[61px] z-30 transition-colors">
+      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 py-2 sticky top-[136px] md:top-[69px] z-30 transition-colors">
         <div className="max-w-7xl mx-auto px-4 flex gap-2 overflow-x-auto py-1 scrollbar-hide">
           {CATEGORIES.map(c => (
             <button
