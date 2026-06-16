@@ -83,6 +83,8 @@ export default function ShopPage() {
   const [apiProducts, setApiProducts] = useState<ShopProduct[]>([]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, mins: 0, secs: 0 });
+  const [minRating, setMinRating] = useState<number | null>(null);
+  const [priceRange, setPriceRange] = useState<'all' | 'under500' | '500to1000' | '1000to5000' | 'over5000'>('all');
 
   // ── Checkout Stepper States ──────────────────────────────────────────────
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'payment' | 'success'>('cart');
@@ -166,11 +168,26 @@ export default function ShopPage() {
     let items = [...allProducts];
     if (category !== 'All') items = items.filter(p => p.category === category);
     if (search) items = items.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+    
+    if (minRating !== null) {
+      items = items.filter(p => p.rating >= minRating);
+    }
+
+    if (priceRange === 'under500') {
+      items = items.filter(p => p.price < 500);
+    } else if (priceRange === '500to1000') {
+      items = items.filter(p => p.price >= 500 && p.price <= 1000);
+    } else if (priceRange === '1000to5000') {
+      items = items.filter(p => p.price >= 1000 && p.price <= 5000);
+    } else if (priceRange === 'over5000') {
+      items = items.filter(p => p.price > 5000);
+    }
+
     if (sortBy === 'price-low')  items.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-high') items.sort((a, b) => b.price - a.price);
     if (sortBy === 'rating')     items.sort((a, b) => b.rating - a.rating);
     return items;
-  }, [category, search, sortBy, allProducts]);
+  }, [category, search, sortBy, minRating, priceRange, allProducts]);
 
   // ── Cart helpers ──────────────────────────────────────────────────────
   const cartSubtotal = cart.reduce((sum, e) => sum + e.product.price * e.qty, 0);
@@ -491,125 +508,192 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* ── Main Shop Grid ── */}
-      <main className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+      {/* ── Main Shop Content ── */}
+      <div className="max-w-[1500px] mx-auto px-4 py-8 relative z-10 flex gap-6">
         
-        {/* Sorting bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/30 dark:border-slate-800/30 px-4 py-3 rounded-2xl">
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            Showing <span className="font-bold text-slate-850 dark:text-slate-100">{filtered.length}</span> items
-            {category !== 'All' && <> in <span className="text-orange-500 font-bold">{category}</span></>}
-          </p>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Sort By</span>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="text-xs border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-orange-500/20 focus:outline-none font-semibold transition-all"
-            >
-              <option value="featured">✨ Featured Products</option>
-              <option value="price-low">📉 Price: Low to High</option>
-              <option value="price-high">📈 Price: High to Low</option>
-              <option value="rating">★ Top Rated Items</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Product Grid container with AnimatePresence */}
-        {filtered.length === 0 ? (
-          <div className="text-center py-20 bg-white/40 dark:bg-slate-900/40 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 backdrop-blur-md">
-            <div className="text-5xl mb-4">🔍</div>
-            <p className="text-lg font-bold text-slate-700 dark:text-slate-300">No products found</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Try resetting filters or search query.</p>
-          </div>
-        ) : (
-          <motion.div 
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-          >
-            {filtered.map(p => {
-              const inCart = cart.find(e => e.product.uid === p.uid);
-              return (
-                <motion.div
-                  layout
-                  key={p.uid}
-                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                  className="bg-white/80 dark:bg-slate-900/80 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col group backdrop-blur-md"
+        {/* Left Sidebar Filters (Amazon Style) */}
+        <aside className="w-64 hidden md:block shrink-0">
+          <div className="bg-white p-4 border border-slate-200 sticky top-32">
+            
+            {/* Header with Clear button */}
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+              <span className="font-bold text-slate-900">Filters</span>
+              {(category !== 'All' || minRating !== null || priceRange !== 'all' || search !== '') && (
+                <button 
+                  onClick={() => {
+                    setCategory('All');
+                    setMinRating(null);
+                    setPriceRange('all');
+                    setSearch('');
+                  }}
+                  className="text-xs text-orange-500 hover:text-orange-600 font-bold hover:underline"
                 >
-                  {/* Image area */}
-                  <div className="relative h-48 bg-slate-50 dark:bg-slate-950 flex items-center justify-center overflow-hidden border-b border-slate-100 dark:border-slate-800">
-                    
-                    {/* Glowing colored overlay behind product */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${COLOR_MAP[p.category] || COLOR_MAP.default} opacity-40 group-hover:scale-110 transition-transform duration-500`} />
-                    
-                    {p.image ? (
-                      <Image 
-                        src={p.image} 
-                        alt={p.name} 
-                        width={200} 
-                        height={200} 
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" 
-                      />
-                    ) : (
-                      <span className="text-6xl group-hover:scale-110 transition-transform duration-500 select-none z-10 filter drop-shadow-md">
-                        {EMOJI_MAP[p.category] ?? EMOJI_MAP.default}
-                      </span>
-                    )}
-                    
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Categories</h3>
+            <ul className="space-y-2 text-sm text-slate-700 mb-6">
+              {CATEGORIES.map(c => (
+                <li key={c}>
+                  <button 
+                    onClick={() => setCategory(c)}
+                    className={`text-left w-full hover:text-orange-500 transition-colors ${category === c ? 'font-bold text-orange-600' : ''}`}
+                  >
+                    {c}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Customer Review</h3>
+            <ul className="space-y-2.5 text-sm text-slate-700 mb-6">
+              {[4, 3, 2, 1].map((r) => (
+                <li key={r}>
+                  <button 
+                    onClick={() => setMinRating(minRating === r ? null : r)}
+                    className={`flex items-center hover:text-orange-500 transition-colors ${minRating === r ? 'font-bold text-orange-600' : ''}`}
+                  >
+                    <span className="text-yellow-500 mr-1.5 font-bold">
+                      {"★".repeat(r)}{"☆".repeat(5 - r)}
+                    </span>
+                    & Up
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Price</h3>
+            <ul className="space-y-2 text-sm text-slate-700">
+              {[
+                { key: 'all', label: 'All Prices' },
+                { key: 'under500', label: 'Under ₹500' },
+                { key: '500to1000', label: '₹500 - ₹1,000' },
+                { key: '1000to5000', label: '₹1,000 - ₹5,000' },
+                { key: 'over5000', label: 'Over ₹5,000' },
+              ].map((range) => (
+                <li key={range.key}>
+                  <button 
+                    onClick={() => setPriceRange(range.key as any)}
+                    className={`text-left w-full hover:text-orange-500 transition-colors ${priceRange === range.key ? 'font-bold text-orange-600' : ''}`}
+                  >
+                    {range.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+
+        {/* Main Product Grid */}
+        <main className="flex-1 min-w-0">
+          
+          {/* Sorting bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white border border-slate-200 px-4 py-2 shadow-sm">
+            <p className="text-sm text-slate-600 font-medium">
+              Showing <span className="font-bold text-slate-900">{filtered.length}</span> results
+              {category !== 'All' && <> for <span className="text-orange-600 font-bold">"{category}"</span></>}
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-600 font-medium">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="text-sm border border-slate-300 rounded px-2 py-1 bg-white text-slate-800 focus:border-orange-500 outline-none cursor-pointer"
+              >
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Avg. Customer Review</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Product Grid */}
+          {filtered.length === 0 ? (
+            <div className="text-center py-20 bg-white border border-slate-200">
+              <p className="text-lg font-bold text-slate-700">No results for {search || category}</p>
+              <p className="text-sm text-slate-500 mt-1">Try checking your spelling or use more general terms</p>
+            </div>
+          ) : (
+            <motion.div 
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              {filtered.map(p => {
+                const inCart = cart.find(e => e.product.uid === p.uid);
+                return (
+                  <motion.div
+                    layout
+                    key={p.uid}
+                    className="bg-white border border-slate-200 flex flex-col group relative overflow-hidden"
+                  >
                     {/* Badges */}
                     {p.badge && (
-                      <span className="absolute top-3 left-3 bg-slate-900/80 dark:bg-slate-100/90 text-white dark:text-slate-900 text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-md">
+                      <span className="absolute top-0 left-0 bg-[#C45500] text-white text-[10px] font-bold px-2 py-1 z-10">
                         {p.badge}
                       </span>
                     )}
-                    {p.mrp > p.price && (
-                      <span className="absolute top-3 right-3 bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
-                        -{disc(p.price, p.mrp)}% OFF
-                      </span>
-                    )}
-                  </div>
 
-                  {/* Info details */}
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] text-orange-500 font-extrabold uppercase tracking-widest">{p.category}</span>
+                    {/* Image area */}
+                    <div className="relative h-48 bg-slate-50 flex items-center justify-center p-4">
+                      {p.image ? (
+                        <Image 
+                          src={p.image} 
+                          alt={p.name} 
+                          width={200} 
+                          height={200} 
+                          className="object-contain w-full h-full mix-blend-multiply" 
+                        />
+                      ) : (
+                        <span className="text-6xl select-none z-10 filter drop-shadow-md">
+                          {EMOJI_MAP[p.category] ?? EMOJI_MAP.default}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Info details */}
+                    <div className="p-3 flex flex-col flex-1">
+                      <h3 className="text-sm text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer leading-snug mb-1 line-clamp-2">
+                        {p.name}
+                      </h3>
+                      
                       {p.rating > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-yellow-400 text-xs font-bold">★</span>
-                          <span className="text-xs text-slate-600 dark:text-slate-350 font-bold">{p.rating}</span>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-[#FFA41C] text-sm">★★★★☆</span>
+                          <span className="text-xs text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{p.reviews}</span>
                         </div>
                       )}
-                    </div>
-                    
-                    <h3 className="text-sm font-semibold text-slate-850 dark:text-slate-100 leading-snug mb-3 line-clamp-2 flex-1">
-                      {p.name}
-                    </h3>
-                    
-                    <div className="flex items-baseline gap-2 mb-4">
-                      <span className="text-lg font-black text-slate-900 dark:text-white">₹{p.price.toLocaleString()}</span>
-                      {p.mrp > p.price && (
-                        <span className="text-xs text-slate-405 dark:text-slate-500 line-through">₹{p.mrp.toLocaleString()}</span>
-                      )}
-                    </div>
+                      
+                      <div className="flex items-baseline gap-1.5 mb-1 mt-auto">
+                        <span className="text-xl font-medium text-[#0F1111]">₹{p.price.toLocaleString()}</span>
+                        {p.mrp > p.price && (
+                          <span className="text-sm text-[#565959] line-through">M.R.P: ₹{p.mrp.toLocaleString()}</span>
+                        )}
+                      </div>
+                      
+                      <p className="text-xs text-[#565959] mb-3">Get it by Tomorrow</p>
 
-                    <button
-                      onClick={() => addToCart(p)}
-                      className={`w-full text-xs font-bold py-3 rounded-2xl transition-all duration-200 active:scale-95 cursor-pointer shadow-md ${
-                        inCart
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/10'
-                          : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/10'
-                      }`}
-                    >
-                      {inCart ? `✓ Added (${inCart.qty})` : '🛍️ Add to Cart'}
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </main>
+                      <button
+                        onClick={() => addToCart(p)}
+                        className={`w-full text-sm py-1.5 rounded-full transition-colors cursor-pointer border ${
+                          inCart
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
+                            : 'bg-[#FFD814] border-[#FCD200] hover:bg-[#F7CA00] text-[#0F1111]'
+                        }`}
+                      >
+                        {inCart ? `Added (${inCart.qty})` : 'Add to cart'}
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </main>
+      </div>
 
       {/* ── Cart Sidebar Drawer (AnimatePresence) ── */}
       <AnimatePresence>

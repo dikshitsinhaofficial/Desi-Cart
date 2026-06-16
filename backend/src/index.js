@@ -216,7 +216,7 @@ const generateAllSeedProducts = () => {
   const categories = ["Electronics", "Fitness", "Groceries", "Food", "Clothing"];
   let all = [];
   categories.forEach(cat => {
-    all = all.concat(generateProductsForCategory(cat, 100));
+    all = all.concat(generateProductsForCategory(cat, 40));
   });
   return all;
 };
