@@ -456,11 +456,11 @@ app.get('/api/products', async (req, res) => {
 
 // POST add a new product
 app.post('/api/products', async (req, res) => {
-  const { name, category, price, mrp, description, sellerName } = req.body;
+  const { name, category, price, mrp, description, sellerName, image } = req.body;
   if (!name || !category || !price) return res.status(400).json({ error: 'Required fields missing' });
   try {
     if (isMongoConnected) {
-      const product = new Product({ name, category, price, mrp, description, sellerName });
+      const product = new Product({ name, category, price, mrp, description, sellerName, image });
       await product.save();
       res.status(201).json(product);
     } else {
@@ -474,6 +474,7 @@ app.post('/api/products', async (req, res) => {
         sellerName: sellerName || 'Anonymous Seller',
         rating: 0,
         reviews: 0,
+        image: image || undefined,
         createdAt: new Date().toISOString()
       };
       inMemoryProducts.push(product);

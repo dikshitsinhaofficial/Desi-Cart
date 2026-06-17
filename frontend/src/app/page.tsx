@@ -128,7 +128,7 @@ export default function Home() {
             <div className="flex-1 bg-slate-100 overflow-hidden relative group cursor-pointer">
               <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
             </div>
-            <Link href="/shop" className="text-sm text-blue-600 mt-4 hover:underline">Shop now</Link>
+            <Link href="/shop?category=Groceries" className="text-sm text-blue-600 mt-4 hover:underline">Shop now</Link>
           </div>
           
           <div className="bg-white p-4 shadow-sm z-10 flex flex-col h-[400px]">
@@ -136,7 +136,7 @@ export default function Home() {
             <div className="flex-1 bg-slate-100 overflow-hidden relative group cursor-pointer">
               <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
             </div>
-            <Link href="/shop" className="text-sm text-blue-600 mt-4 hover:underline">See all offers</Link>
+            <Link href="/shop?category=Fitness" className="text-sm text-blue-600 mt-4 hover:underline">See all offers</Link>
           </div>
           
           <div className="bg-white p-4 shadow-sm z-10 flex flex-col h-[400px]">

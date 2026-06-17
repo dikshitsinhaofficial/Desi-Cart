@@ -29,7 +29,7 @@ export default function SellerDashboard() {
   const [myProducts, setMyProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<SellerStats>({ productCount: 0, activeOrders: 0, totalSales: 0 });
   const [form, setForm] = useState({
-    name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: 'My Store',
+    name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: 'My Store', image: '',
   });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -78,7 +78,7 @@ export default function SellerDashboard() {
       });
       if (!res.ok) throw new Error();
       showToast("✅ Product added! It's now live in the shop.");
-      setForm({ name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: form.sellerName });
+      setForm({ name: '', category: 'Electronics', price: '', mrp: '', description: '', sellerName: form.sellerName, image: '' });
       fetchMyProducts();
       fetchStats();
       setActiveTab('products');
@@ -237,6 +237,18 @@ export default function SellerDashboard() {
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
+                <input
+                  type="url"
+                  placeholder="https://images.unsplash.com/photo-..."
+                  value={form.image}
+                  onChange={e => setForm({ ...form, image: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-1">Paste a direct image link (e.g. from Unsplash). Leave blank to use default.</p>
               </div>
 
               <button

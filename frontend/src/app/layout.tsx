@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import Script from "next/script";
 import Link from "next/link";
+import HeaderSearchBar from "./components/HeaderSearchBar";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -35,24 +36,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </Link>
               
               {/* Search Bar - Center */}
-              <div className="flex-1 max-w-3xl hidden md:flex rounded-md overflow-hidden bg-white h-10 shadow-sm border border-transparent focus-within:border-orange-500 transition-colors">
-                <select className="bg-slate-100 text-slate-700 text-sm px-3 border-r border-slate-300 outline-none w-auto max-w-[120px] cursor-pointer">
-                  <option>All Categories</option>
-                  <option>Electronics</option>
-                  <option>Fitness</option>
-                  <option>Groceries</option>
-                  <option>Clothing</option>
-                  <option>Food</option>
-                </select>
-                <input 
-                  type="text" 
-                  placeholder="Search for products, brands and more..." 
-                  className="flex-1 px-4 text-sm text-slate-900 outline-none w-full"
-                />
-                <button className="bg-orange-500 hover:bg-orange-600 transition-colors px-5 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </button>
-              </div>
+              <HeaderSearchBar />
 
               {/* Right Menu */}
               <div className="flex items-center gap-6 text-sm font-semibold whitespace-nowrap">
@@ -82,12 +66,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                 All
               </Link>
-              <Link href="/shop" className="hover:text-orange-400 transition-colors">Today's Deals</Link>
-              <Link href="/shop" className="hover:text-orange-400 transition-colors">Electronics</Link>
-              <Link href="/shop" className="hover:text-orange-400 transition-colors">Mobiles</Link>
-              <Link href="/shop" className="hover:text-orange-400 transition-colors">Fashion</Link>
-              <Link href="/shop" className="hover:text-orange-400 transition-colors">Home & Kitchen</Link>
-              <Link href="/shop" className="hover:text-orange-400 transition-colors">Groceries</Link>
+              <Link href="/shop" className="hover:text-orange-400 transition-colors">Today&apos;s Deals</Link>
+              <Link href="/shop?category=Electronics" className="hover:text-orange-400 transition-colors">Electronics</Link>
+              <Link href="/shop?category=Electronics" className="hover:text-orange-400 transition-colors">Mobiles</Link>
+              <Link href="/shop?category=Clothing" className="hover:text-orange-400 transition-colors">Fashion</Link>
+              <Link href="/shop?category=Groceries" className="hover:text-orange-400 transition-colors">Home &amp; Kitchen</Link>
+              <Link href="/shop?category=Groceries" className="hover:text-orange-400 transition-colors">Groceries</Link>
               <Link href="/shop" className="hover:text-orange-400 transition-colors">Customer Service</Link>
             </div>
           </header>

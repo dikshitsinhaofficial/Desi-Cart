@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag,
@@ -85,6 +86,15 @@ export default function ShopPage() {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, mins: 0, secs: 0 });
   const [minRating, setMinRating] = useState<number | null>(null);
   const [priceRange, setPriceRange] = useState<'all' | 'under500' | '500to1000' | '1000to5000' | 'over5000'>('all');
+
+  // ── Read URL search params from header search ─────────────────────────
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const urlSearch = searchParams.get('search');
+    const urlCategory = searchParams.get('category');
+    if (urlSearch) setSearch(urlSearch);
+    if (urlCategory && CATEGORIES.includes(urlCategory)) setCategory(urlCategory);
+  }, [searchParams]);
 
   // ── Checkout Stepper States ──────────────────────────────────────────────
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'payment' | 'success'>('cart');
@@ -998,8 +1008,7 @@ export default function ShopPage() {
                         <CheckCircle2 size={56} />
                       </motion.div>
                     </div>
-
-                    <div className="space-y-2">
+        <div className="space-y-2">
                       <h3 className="text-xl font-black text-slate-905 dark:text-white">Purchase Successful!</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                         Order ID: <span className="font-bold text-slate-850 dark:text-slate-200">{completedOrder.orderId}</span>
