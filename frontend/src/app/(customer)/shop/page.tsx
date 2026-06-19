@@ -62,16 +62,7 @@ const COLOR_MAP: Record<string, string> = {
   Clothing: 'from-pink-400/20 to-rose-500/20', default: 'from-gray-500/20 to-gray-700/20',
 };
 
-const STATIC_PRODUCTS: ShopProduct[] = [
-  { uid: 's1',  name: 'DesiTech Wireless Earbuds Pro v1', category: 'Electronics', price: 1299, mrp: 2999, rating: 4.3, reviews: 234, color: 'from-blue-500/20 to-indigo-600/20', badge: 'Best Seller' },
-  { uid: 's2',  name: 'BharatFit Non-Slip Yoga Mat v1', category: 'Fitness', price: 699, mrp: 1499, rating: 4.5, reviews: 128, color: 'from-teal-400/20 to-emerald-600/20', badge: 'Popular' },
-  { uid: 's3',  name: 'Pure Cow Ghee Jar v1', category: 'Groceries', price: 650, mrp: 899, rating: 4.7, reviews: 456, color: 'from-green-400/20 to-emerald-500/20', badge: 'Organic' },
-  { uid: 's4',  name: 'Masala Potato Chips Crunchy v1', category: 'Food', price: 40, mrp: 60, rating: 4.1, reviews: 789, color: 'from-amber-400/20 to-yellow-500/20', badge: 'Spicy' },
-  { uid: 's5',  name: 'Classic Cotton Kurta Men v1', category: 'Clothing', price: 699, mrp: 1299, rating: 4.4, reviews: 320, color: 'from-pink-400/20 to-rose-500/20', badge: 'Traditional' },
-  { uid: 's6',  name: 'Vedic Smart Fitness Watch v1', category: 'Fitness', price: 2499, mrp: 4999, rating: 4.6, reviews: 92, color: 'from-teal-400/20 to-emerald-600/20', badge: 'New Arrival' }
-];
-
-const CATEGORIES = ['All', 'Electronics', 'Fitness', 'Groceries', 'Food', 'Clothing'];
+import { CATEGORIES, STATIC_PRODUCTS } from '../../data/products';
 const disc = (p: number, m: number) => Math.round((1 - p / m) * 100);
 
 export default function ShopPage() {
@@ -93,10 +84,11 @@ export default function ShopPage() {
     const urlSearch = searchParams.get('search');
     const urlCategory = searchParams.get('category');
     if (urlSearch) setSearch(urlSearch);
-    if (urlCategory && CATEGORIES.includes(urlCategory)) setCategory(urlCategory);
+    if (urlCategory && ['All', ...CATEGORIES].includes(urlCategory)) setCategory(urlCategory);
   }, [searchParams]);
 
   // ── Checkout Stepper States ──────────────────────────────────────────────
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'payment' | 'success'>('cart');
   const [addressName, setAddressName] = useState('');
   const [addressPhone, setAddressPhone] = useState('');
@@ -522,7 +514,7 @@ export default function ShopPage() {
       <div className="max-w-[1500px] mx-auto px-4 py-8 relative z-10 flex gap-6">
         
         {/* Left Sidebar Filters (Amazon Style) */}
-        <aside className="w-64 hidden md:block shrink-0">
+        <aside className={`w-full md:w-64 shrink-0 ${showMobileFilters ? 'block' : 'hidden md:block'}`}>
           <div className="bg-white p-4 border border-slate-200 sticky top-32">
             
             {/* Header with Clear button */}
@@ -545,7 +537,7 @@ export default function ShopPage() {
 
             <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Categories</h3>
             <ul className="space-y-2 text-sm text-slate-700 mb-6">
-              {CATEGORIES.map(c => (
+              {['All', ...CATEGORIES].map(c => (
                 <li key={c}>
                   <button 
                     onClick={() => setCategory(c)}
@@ -599,12 +591,20 @@ export default function ShopPage() {
         {/* Main Product Grid */}
         <main className="flex-1 min-w-0">
           
-          {/* Sorting bar */}
+          {/* Sorting bar & Mobile Filter Toggle */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white border border-slate-200 px-4 py-2 shadow-sm">
-            <p className="text-sm text-slate-600 font-medium">
-              Showing <span className="font-bold text-slate-900">{filtered.length}</span> results
-              {category !== 'All' && <> for <span className="text-orange-600 font-bold">"{category}"</span></>}
-            </p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="md:hidden text-slate-700 font-bold border border-slate-300 px-3 py-1.5 rounded bg-slate-50 flex items-center gap-2"
+              >
+                Filters {showMobileFilters ? '▲' : '▼'}
+              </button>
+              <p className="text-sm text-slate-600 font-medium">
+                Showing <span className="font-bold text-slate-900">{filtered.length}</span> results
+                {category !== 'All' && <> for <span className="text-orange-600 font-bold">&quot;{category}&quot;</span></>}
+              </p>
+            </div>
             
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-600 font-medium">Sort by:</span>
