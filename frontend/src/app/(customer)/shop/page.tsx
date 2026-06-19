@@ -75,8 +75,8 @@ export default function ShopPage() {
   const [apiProducts, setApiProducts] = useState<ShopProduct[]>([]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, mins: 0, secs: 0 });
-  const [minRating, setMinRating] = useState<number | null>(null);
-  const [priceRange, setPriceRange] = useState<'all' | 'under500' | '500to1000' | '1000to5000' | 'over5000'>('all');
+  const [sliderMaxPrice, setSliderMaxPrice] = useState(100000);
+  const [showFloatingFilter, setShowFloatingFilter] = useState(false);
 
   // ── Read URL search params from header search ─────────────────────────
   const searchParams = useSearchParams();
@@ -86,6 +86,10 @@ export default function ShopPage() {
     if (urlSearch) setSearch(urlSearch);
     if (urlCategory && ['All', ...CATEGORIES].includes(urlCategory)) setCategory(urlCategory);
   }, [searchParams]);
+
+  // ── Pagination State ──────────────────────────────────────────────────────
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 24;
 
   // ── Checkout Stepper States ──────────────────────────────────────────────
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -153,6 +157,7 @@ export default function ShopPage() {
   const fetchWallet = async () => {
     try {
       const res = await fetch(`${API}/api/wallet`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       setWalletBalance(data.balance);
     } catch (err) {
@@ -171,25 +176,25 @@ export default function ShopPage() {
     if (category !== 'All') items = items.filter(p => p.category === category);
     if (search) items = items.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
     
-    if (minRating !== null) {
-      items = items.filter(p => p.rating >= minRating);
-    }
-
-    if (priceRange === 'under500') {
-      items = items.filter(p => p.price < 500);
-    } else if (priceRange === '500to1000') {
-      items = items.filter(p => p.price >= 500 && p.price <= 1000);
-    } else if (priceRange === '1000to5000') {
-      items = items.filter(p => p.price >= 1000 && p.price <= 5000);
-    } else if (priceRange === 'over5000') {
-      items = items.filter(p => p.price > 5000);
-    }
+    // Filter by price slider
+    items = items.filter(p => p.price <= sliderMaxPrice);
 
     if (sortBy === 'price-low')  items.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-high') items.sort((a, b) => b.price - a.price);
-    if (sortBy === 'rating')     items.sort((a, b) => b.rating - a.rating);
     return items;
-  }, [category, search, sortBy, minRating, priceRange, allProducts]);
+  }, [category, search, sortBy, sliderMaxPrice, allProducts]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [category, search, sliderMaxPrice]);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage]);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   // ── Cart helpers ──────────────────────────────────────────────────────
   const cartSubtotal = cart.reduce((sum, e) => sum + e.product.price * e.qty, 0);
@@ -515,33 +520,32 @@ export default function ShopPage() {
         
         {/* Left Sidebar Filters (Amazon Style) */}
         <aside className={`w-full md:w-64 shrink-0 ${showMobileFilters ? 'block' : 'hidden md:block'}`}>
-          <div className="bg-white p-4 border border-slate-200 sticky top-32">
+          <div className="bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 sticky top-32 rounded-2xl shadow-sm">
             
             {/* Header with Clear button */}
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
-              <span className="font-bold text-slate-900">Filters</span>
-              {(category !== 'All' || minRating !== null || priceRange !== 'all' || search !== '') && (
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <span className="font-bold text-slate-900 dark:text-white">Filters</span>
+              {(category !== 'All' || sliderMaxPrice !== 100000 || search !== '') && (
                 <button 
                   onClick={() => {
                     setCategory('All');
-                    setMinRating(null);
-                    setPriceRange('all');
+                    setSliderMaxPrice(100000);
                     setSearch('');
                   }}
-                  className="text-xs text-orange-500 hover:text-orange-600 font-bold hover:underline"
+                  className="text-xs text-orange-500 hover:text-orange-600 dark:text-orange-400 font-bold hover:underline"
                 >
                   Clear All
                 </button>
               )}
             </div>
 
-            <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Categories</h3>
-            <ul className="space-y-2 text-sm text-slate-700 mb-6">
+            <h3 className="font-bold mb-3 text-sm text-slate-800 dark:text-slate-200 uppercase tracking-wider">Categories</h3>
+            <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300 mb-6">
               {['All', ...CATEGORIES].map(c => (
                 <li key={c}>
                   <button 
                     onClick={() => setCategory(c)}
-                    className={`text-left w-full hover:text-orange-500 transition-colors ${category === c ? 'font-bold text-orange-600' : ''}`}
+                    className={`text-left w-full hover:text-orange-500 dark:hover:text-orange-400 transition-colors ${category === c ? 'font-bold text-orange-600 dark:text-orange-400' : ''}`}
                   >
                     {c}
                   </button>
@@ -549,42 +553,48 @@ export default function ShopPage() {
               ))}
             </ul>
 
-            <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Customer Review</h3>
-            <ul className="space-y-2.5 text-sm text-slate-700 mb-6">
-              {[4, 3, 2, 1].map((r) => (
-                <li key={r}>
-                  <button 
-                    onClick={() => setMinRating(minRating === r ? null : r)}
-                    className={`flex items-center hover:text-orange-500 transition-colors ${minRating === r ? 'font-bold text-orange-600' : ''}`}
-                  >
-                    <span className="text-yellow-500 mr-1.5 font-bold">
-                      {"★".repeat(r)}{"☆".repeat(5 - r)}
-                    </span>
-                    & Up
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            <h3 className="font-bold mb-3 text-sm text-slate-800 uppercase tracking-wider">Price</h3>
-            <ul className="space-y-2 text-sm text-slate-700">
-              {[
-                { key: 'all', label: 'All Prices' },
-                { key: 'under500', label: 'Under ₹500' },
-                { key: '500to1000', label: '₹500 - ₹1,000' },
-                { key: '1000to5000', label: '₹1,000 - ₹5,000' },
-                { key: 'over5000', label: 'Over ₹5,000' },
-              ].map((range) => (
-                <li key={range.key}>
-                  <button 
-                    onClick={() => setPriceRange(range.key as any)}
-                    className={`text-left w-full hover:text-orange-500 transition-colors ${priceRange === range.key ? 'font-bold text-orange-600' : ''}`}
-                  >
-                    {range.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <h3 className="font-bold mb-3 text-sm text-slate-800 dark:text-slate-200 uppercase tracking-wider">Price Range</h3>
+            <div className="mb-2">
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <span>₹0</span>
+                <span className="font-bold text-orange-600 dark:text-orange-400">Up to ₹{sliderMaxPrice.toLocaleString()}</span>
+              </div>
+              <input 
+                type="range" 
+                min="100" 
+                max="100000" 
+                step="500"
+                value={sliderMaxPrice} 
+                onChange={(e) => setSliderMaxPrice(Number(e.target.value))}
+                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+              />
+              <div className="flex justify-between mt-2">
+                <button 
+                  onClick={() => setSliderMaxPrice(1000)} 
+                  className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  ₹1k
+                </button>
+                <button 
+                  onClick={() => setSliderMaxPrice(5000)} 
+                  className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  ₹5k
+                </button>
+                <button 
+                  onClick={() => setSliderMaxPrice(20000)} 
+                  className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  ₹20k
+                </button>
+                <button 
+                  onClick={() => setSliderMaxPrice(100000)} 
+                  className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Max
+                </button>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -592,117 +602,134 @@ export default function ShopPage() {
         <main className="flex-1 min-w-0">
           
           {/* Sorting bar & Mobile Filter Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white border border-slate-200 px-4 py-2 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 shadow-sm rounded-2xl">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="md:hidden text-slate-700 font-bold border border-slate-300 px-3 py-1.5 rounded bg-slate-50 flex items-center gap-2"
+                className="md:hidden text-slate-700 dark:text-slate-300 font-bold border border-slate-300 dark:border-slate-800 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center gap-2"
               >
                 Filters {showMobileFilters ? '▲' : '▼'}
               </button>
-              <p className="text-sm text-slate-600 font-medium">
-                Showing <span className="font-bold text-slate-900">{filtered.length}</span> results
-                {category !== 'All' && <> for <span className="text-orange-600 font-bold">&quot;{category}&quot;</span></>}
+              <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                Showing <span className="font-bold text-slate-900 dark:text-white">{filtered.length}</span> results
+                {category !== 'All' && <> for <span className="text-orange-600 dark:text-orange-400 font-bold">&quot;{category}&quot;</span></>}
               </p>
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-600 font-medium">Sort by:</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="text-sm border border-slate-300 rounded px-2 py-1 bg-white text-slate-800 focus:border-orange-500 outline-none cursor-pointer"
+                className="text-sm border border-slate-300 dark:border-slate-800 rounded-lg px-2 py-1 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:border-orange-500 outline-none cursor-pointer"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                <option value="rating">Avg. Customer Review</option>
               </select>
             </div>
           </div>
 
           {/* Product Grid */}
           {filtered.length === 0 ? (
-            <div className="text-center py-20 bg-white border border-slate-200">
-              <p className="text-lg font-bold text-slate-700">No results for {search || category}</p>
-              <p className="text-sm text-slate-500 mt-1">Try checking your spelling or use more general terms</p>
+            <div className="text-center py-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+              <p className="text-lg font-bold text-slate-700 dark:text-slate-300">No results for {search || category}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Try checking your spelling or use more general terms</p>
             </div>
           ) : (
-            <motion.div 
-              layout
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-            >
-              {filtered.map(p => {
-                const inCart = cart.find(e => e.product.uid === p.uid);
-                return (
-                  <motion.div
-                    layout
-                    key={p.uid}
-                    className="bg-white border border-slate-200 flex flex-col group relative overflow-hidden"
-                  >
-                    {/* Badges */}
-                    {p.badge && (
-                      <span className="absolute top-0 left-0 bg-[#C45500] text-white text-[10px] font-bold px-2 py-1 z-10">
-                        {p.badge}
-                      </span>
-                    )}
-
-                    {/* Image area */}
-                    <div className="relative h-48 bg-slate-50 flex items-center justify-center p-4">
-                      {p.image ? (
-                        <Image 
-                          src={p.image} 
-                          alt={p.name} 
-                          width={200} 
-                          height={200} 
-                          className="object-contain w-full h-full mix-blend-multiply" 
-                        />
-                      ) : (
-                        <span className="text-6xl select-none z-10 filter drop-shadow-md">
-                          {EMOJI_MAP[p.category] ?? EMOJI_MAP.default}
+            <>
+              <motion.div 
+                layout
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+              >
+                {paginatedProducts.map(p => {
+                  const inCart = cart.find(e => e.product.uid === p.uid);
+                  return (
+                    <motion.div
+                      layout
+                      key={p.uid}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col group relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {/* Badges */}
+                      {p.badge && (
+                        <span className="absolute top-0 left-0 bg-[#C45500] text-white text-[10px] font-bold px-2.5 py-1 z-10 rounded-br-lg">
+                          {p.badge}
                         </span>
                       )}
-                    </div>
 
-                    {/* Info details */}
-                    <div className="p-3 flex flex-col flex-1">
-                      <h3 className="text-sm text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer leading-snug mb-1 line-clamp-2">
-                        {p.name}
-                      </h3>
-                      
-                      {p.rating > 0 && (
-                        <div className="flex items-center gap-1 mb-1">
-                          <span className="text-[#FFA41C] text-sm">★★★★☆</span>
-                          <span className="text-xs text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{p.reviews}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-baseline gap-1.5 mb-1 mt-auto">
-                        <span className="text-xl font-medium text-[#0F1111]">₹{p.price.toLocaleString()}</span>
-                        {p.mrp > p.price && (
-                          <span className="text-sm text-[#565959] line-through">M.R.P: ₹{p.mrp.toLocaleString()}</span>
+                      {/* Image Box */}
+                      <div className="h-48 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-center p-4 relative overflow-hidden transition-all duration-300 group-hover:bg-slate-100/80 dark:group-hover:bg-slate-950/80">
+                        {p.image ? (
+                          <Image 
+                            src={p.image} 
+                            alt={p.name} 
+                            width={200} 
+                            height={200} 
+                            className="object-contain w-full h-full dark:mix-blend-normal mix-blend-multiply" 
+                          />
+                        ) : (
+                          <span className="text-6xl select-none z-10 filter drop-shadow-md">
+                            {EMOJI_MAP[p.category] ?? EMOJI_MAP.default}
+                          </span>
                         )}
                       </div>
                       
-                      <p className="text-xs text-[#565959] mb-3">Get it by Tomorrow</p>
+                      {/* Info details */}
+                      <div className="p-3 flex flex-col flex-1">
+                        <h3 className="text-sm text-slate-800 dark:text-slate-200 hover:text-orange-500 dark:hover:text-orange-400 cursor-pointer font-semibold leading-snug mb-2 line-clamp-2 transition-colors">
+                          {p.name}
+                        </h3>
+                        
+                        <div className="flex items-baseline gap-1.5 mb-1 mt-auto">
+                          <span className="text-xl font-bold text-slate-900 dark:text-white">₹{p.price.toLocaleString()}</span>
+                          {p.mrp > p.price && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400 line-through">M.R.P: ₹{p.mrp.toLocaleString()}</span>
+                          )}
+                        </div>
+                        
+                        <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mb-3">Get it by Tomorrow</p>
 
-                      <button
-                        onClick={() => addToCart(p)}
-                        className={`w-full text-sm py-1.5 rounded-full transition-colors cursor-pointer border ${
-                          inCart
-                            ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
-                            : 'bg-[#FFD814] border-[#FCD200] hover:bg-[#F7CA00] text-[#0F1111]'
-                        }`}
-                      >
-                        {inCart ? `Added (${inCart.qty})` : 'Add to cart'}
-                      </button>
-                    </div>
-                  </motion.div>
+                        <button
+                          onClick={() => addToCart(p)}
+                          className={`w-full text-sm py-2 rounded-xl transition-colors cursor-pointer border font-bold ${
+                            inCart
+                              ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-[#FFD814] border-[#FCD200] hover:bg-[#F7CA00] text-[#0F1111] dark:text-slate-950'
+                          }`}
+                        >
+                          {inCart ? `Added (${inCart.qty})` : 'Add to cart'}
+                        </button>
+                      </div>
+                    </motion.div>
                 );
               })}
             </motion.div>
-          )}
-        </main>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8 mb-4">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-4 py-2 text-sm font-semibold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  Page <strong className="text-slate-900 dark:text-white">{currentPage}</strong> of <strong className="text-slate-900 dark:text-white">{totalPages}</strong>
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="px-4 py-2 text-sm font-semibold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </main>
       </div>
 
       {/* ── Cart Sidebar Drawer (AnimatePresence) ── */}
@@ -1108,6 +1135,125 @@ export default function ShopPage() {
                 </div>
               )}
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Filter Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setShowFloatingFilter(true)}
+          className="flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-95 transition-all cursor-pointer text-sm"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          Quick Filter
+        </button>
+      </div>
+
+      {/* Floating Filter Panel overlay */}
+      <AnimatePresence>
+        {showFloatingFilter && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFloatingFilter(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs cursor-pointer"
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 50 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl z-10 text-slate-800 dark:text-slate-100 flex flex-col gap-6"
+            >
+              <button
+                onClick={() => setShowFloatingFilter(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+              </button>
+
+              <div>
+                <h3 className="text-xl font-extrabold bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent mb-1">
+                  Filters &amp; Settings
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Refine your shopping feed instantly.</p>
+              </div>
+
+              {/* Category Selector */}
+              <div>
+                <label className="block text-sm font-bold mb-3 text-slate-700 dark:text-slate-300">
+                  Select Category
+                </label>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+                  {['All', ...CATEGORIES].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCategory(c)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                        category === c
+                          ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-500/20'
+                          : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price Range Slider */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    Max Price Limit
+                  </label>
+                  <span className="text-sm font-black text-orange-600 dark:text-orange-400">
+                    ₹{sliderMaxPrice.toLocaleString()}
+                  </span>
+                </div>
+                
+                <input
+                  type="range"
+                  min="100"
+                  max="100000"
+                  step="500"
+                  value={sliderMaxPrice}
+                  onChange={(e) => setSliderMaxPrice(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500 mb-3"
+                />
+                
+                <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span>Min: ₹100</span>
+                  <span>Max: ₹100,000+</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => {
+                    setCategory('All');
+                    setSliderMaxPrice(100000);
+                  }}
+                  className="flex-1 py-3 text-sm font-bold rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowFloatingFilter(false)}
+                  className="flex-1 py-3 text-sm font-bold rounded-2xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 transition-all cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

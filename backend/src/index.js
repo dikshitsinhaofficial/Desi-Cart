@@ -32,193 +32,128 @@ let inMemoryWallet = {
   transactions: []
 };
 
-// ── Dynamic Product Generator ──
-const generateProductsForCategory = (category, count) => {
+// ── Dynamic Product Generator (750 products, 15 categories, 50 items each) ──
+const generateAllSeedProducts = () => {
+  const categories = [
+    "Men's Clothing", "Women's Clothing", "Shoes", "Mobile Phones", 
+    "Laptops & Accessories", "Audio & Watches", "Gym Equipment", 
+    "Sports Outdoors", "Food & Groceries", "Beverages", 
+    "Home Decor", "Beauty & Personal Care", "Toys & Games", 
+    "Books", "Pet Supplies"
+  ];
+
+  const brands = {
+    "Men's Clothing": ["Levi's", "Nike", "Adidas", "Puma", "Zara", "H&M", "Raymond", "Tommy Hilfiger", "Calvin Klein", "Wrangler"],
+    "Women's Clothing": ["Zara", "H&M", "Biba", "FabIndia", "Vero Moda", "Forever 21", "Mango", "Gucci", "Prada", "Chanel"],
+    "Shoes": ["Nike", "Adidas", "Puma", "Reebok", "New Balance", "Vans", "Converse", "Skechers", "Bata", "Woodland"],
+    "Mobile Phones": ["Apple", "Samsung", "OnePlus", "Google", "Xiaomi", "Vivo", "Oppo", "Realme", "Motorola", "Nothing"],
+    "Laptops & Accessories": ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "Microsoft", "Razer", "MSI", "Logitech"],
+    "Audio & Watches": ["Sony", "Bose", "Sennheiser", "JBL", "Apple", "Samsung", "Garmin", "Fossil", "Casio", "Rolex"],
+    "Gym Equipment": ["Decathlon", "Bowflex", "NordicTrack", "Golds Gym", "Rogue", "ProForm", "TRX", "Peloton", "Everlast", "Bodycraft"],
+    "Sports Outdoors": ["Decathlon", "Columbia", "The North Face", "Patagonia", "Salomon", "Yonex", "Spalding", "Wilson", "Coleman", "Nivia"],
+    "Food & Groceries": ["Nestle", "Amul", "Britannia", "ITC", "Parle", "Tata", "Haldiram's", "Kellogg's", "Cadbury", "Patanjali"],
+    "Beverages": ["Coca-Cola", "Pepsi", "Red Bull", "Monster", "Nescafe", "Bru", "Lipton", "Taj Mahal", "Paper Boat", "Tropicana"],
+    "Home Decor": ["IKEA", "Home Centre", "Bombay Dyeing", "Pepperfry", "Urban Ladder", "D'Decor", "Chumbak", "Wakefit", "FabIndia", "Swayam"],
+    "Beauty & Personal Care": ["L'Oreal", "Maybelline", "MAC", "Lakme", "Nykaa", "The Body Shop", "Plum", "Mamaearth", "Dove", "Nivea"],
+    "Toys & Games": ["LEGO", "Hasbro", "Mattel", "Hot Wheels", "Barbie", "Fisher-Price", "Nerf", "Funko", "Bandai", "Play-Doh"],
+    "Books": ["Penguin", "HarperCollins", "Scholastic", "Bloomsbury", "Pan Macmillan", "Simon & Schuster", "Rupa", "Oxford", "Pearson", "Arihant"],
+    "Pet Supplies": ["Pedigree", "Whiskas", "Royal Canin", "Drools", "Purina", "Himalaya", "Meat Up", "Purepet", "Kong", "Wahl"]
+  };
+
+  const types = {
+    "Men's Clothing": ["T-Shirt", "Jeans", "Jacket", "Shirt", "Trousers", "Shorts", "Hoodie", "Sweater", "Suit", "Kurta"],
+    "Women's Clothing": ["Dress", "Top", "Jeans", "Skirt", "Jacket", "Saree", "Kurti", "Leggings", "Sweater", "Gown"],
+    "Shoes": ["Sneakers", "Running Shoes", "Formal Shoes", "Boots", "Sandals", "Loafers", "Slippers", "Training Shoes", "Trekking Shoes", "Oxfords"],
+    "Mobile Phones": ["Smartphone", "Pro Smartphone", "Lite Smartphone", "Foldable Phone", "Gaming Phone", "5G Phone", "Camera Phone", "Business Phone", "Flagship Phone", "Budget Phone"],
+    "Laptops & Accessories": ["Laptop", "Gaming Laptop", "Ultrabook", "Wireless Mouse", "Mechanical Keyboard", "Monitor", "Webcam", "Laptop Bag", "Cooling Pad", "USB Hub"],
+    "Audio & Watches": ["Wireless Earbuds", "Over-Ear Headphones", "Smartwatch", "Analog Watch", "Bluetooth Speaker", "Soundbar", "Digital Watch", "Fitness Band", "Gaming Headset", "Chronograph Watch"],
+    "Gym Equipment": ["Dumbbells", "Yoga Mat", "Kettlebell", "Resistance Bands", "Treadmill", "Exercise Bike", "Pull-up Bar", "Weight Bench", "Punching Bag", "Jump Rope"],
+    "Sports Outdoors": ["Basketball", "Football", "Tennis Racket", "Cricket Bat", "Camping Tent", "Sleeping Bag", "Badminton Racket", "Hiking Backpack", "Skateboard", "Cycling Helmet"],
+    "Food & Groceries": ["Basmati Rice", "Whole Wheat Atta", "Olive Oil", "Mixed Nuts", "Pasta", "Organic Honey", "Dark Chocolate", "Oats", "Muesli", "Peanut Butter"],
+    "Beverages": ["Instant Coffee", "Green Tea", "Energy Drink", "Fruit Juice", "Sparkling Water", "Cold Coffee", "Black Tea", "Lemon Iced Tea", "Protein Shake", "Almond Milk"],
+    "Home Decor": ["Ceramic Vase", "Wall Art", "Cushion Cover", "Table Lamp", "Scented Candles", "Indoor Plant", "Wall Clock", "Area Rug", "Photo Frame", "Curtains"],
+    "Beauty & Personal Care": ["Face Wash", "Moisturizer", "Lipstick", "Shampoo", "Body Lotion", "Perfume", "Sunscreen", "Hair Oil", "Conditioner", "Face Serum"],
+    "Toys & Games": ["Board Game", "Building Blocks", "Action Figure", "Remote Control Car", "Puzzle", "Plush Toy", "Card Game", "Doll", "Toy Train", "Educational Toy"],
+    "Books": ["Mystery Novel", "Science Fiction Book", "Biography", "Self-Help Book", "Cookbook", "History Book", "Fantasy Novel", "Business Book", "Children's Book", "Poetry Collection"],
+    "Pet Supplies": ["Dry Dog Food", "Cat Litter", "Pet Bed", "Dog Toys", "Cat Scratching Post", "Pet Grooming Brush", "Dog Collar", "Fish Food", "Bird Seed", "Pet Carrier"]
+  };
+
+  const adjectives = ["Premium", "Elite", "Pro", "Ultra", "Classic", "Modern", "Essential", "Advanced", "Signature", "Luxury", "Standard", "Compact", "Heavy-Duty", "Organic", "Smart"];
+
+  const unsplashKeywords = {
+    "Men's Clothing": ["mens-fashion", "tshirt", "jeans", "mens-clothing"],
+    "Women's Clothing": ["womens-fashion", "dress", "handbag", "womens-clothing"],
+    "Shoes": ["sneakers", "running-shoes", "boots", "footwear"],
+    "Mobile Phones": ["smartphone", "iphone", "android", "mobile-phone"],
+    "Laptops & Accessories": ["laptop", "keyboard", "mouse", "computer"],
+    "Audio & Watches": ["headphones", "earbuds", "smartwatch", "watch"],
+    "Gym Equipment": ["dumbbells", "kettlebell", "yoga-mat", "gym"],
+    "Sports Outdoors": ["basketball", "tennis-racket", "camping-tent", "sports"],
+    "Food & Groceries": ["fresh-vegetables", "fruits", "spices", "groceries"],
+    "Beverages": ["coffee", "tea", "energy-drink", "beverage"],
+    "Home Decor": ["vase", "cushion", "wall-art", "decor"],
+    "Beauty & Personal Care": ["skincare", "makeup", "perfume", "beauty"],
+    "Toys & Games": ["board-game", "action-figure", "lego", "toys"],
+    "Books": ["novel", "textbook", "notebook", "books"],
+    "Pet Supplies": ["dog-food", "cat-toy", "pet-bed", "pets"]
+  };
+
+  const generatedFiles = {
+    hero: "hero_bg_1781934999722.png",
+    electronics: "cat_electronics_1781935010765.png",
+    fashion: "cat_fashion_1781935025497.png",
+    gym: "cat_gym_1781935043053.png",
+    food: "cat_food_1781935055746.png"
+  };
+
   const products = [];
-  
-  const electronicsNames = [
-    { name: "Wireless Earbuds", basePrice: 1299, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400" },
-    { name: "Smart Fitness Watch", basePrice: 2499, image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=400" },
-    { name: "Fast Charging Power Bank", basePrice: 999, image: "https://images.unsplash.com/photo-1609592424109-dd7739504c54?w=400" },
-    { name: "Portable Bluetooth Speaker", basePrice: 1499, image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400" },
-    { name: "Ergonomic Mechanical Keyboard", basePrice: 3499, image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400" },
-    { name: "Gaming Optical Mouse", basePrice: 899, image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=400" },
-    { name: "Type-C Multiport Adapter USB Hub", basePrice: 1199, image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400" },
-    { name: "ANC Noise Cancelling Headphones", basePrice: 4999, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400" },
-    { name: "Ring Light with Tripod Stand", basePrice: 799, image: "https://images.unsplash.com/photo-1593642532400-2682810df593?w=400" },
-    { name: "Adjustable Laptop Cooling Pad", basePrice: 1099, image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400" },
-    { name: "Smart LED Bulb 9W", basePrice: 399, image: "https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=400" },
-    { name: "Full HD Webcam with Mic", basePrice: 1999, image: "https://images.unsplash.com/photo-1600541519468-4a74a61448b1?w=400" },
-    { name: "Hard Drive External 1TB HDD", basePrice: 3999, image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=400" },
-    { name: "Solid State Drive SSD 500GB", basePrice: 4599, image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400" },
-    { name: "Dual-Band Wi-Fi Router", basePrice: 1899, image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400" },
-    { name: "Wireless Charging Dock", basePrice: 1599, image: "https://images.unsplash.com/photo-1622445262465-2481c8573226?w=400" },
-    { name: "Digital Voice Recorder Pen", basePrice: 1299, image: "https://images.unsplash.com/photo-1516280440614-37939bbacd6a?w=400" },
-    { name: "Mini Projector 1080p Support", basePrice: 6999, image: "https://images.unsplash.com/photo-1535016120720-40c646be5580?w=400" },
-    { name: "Grafix Drawing Graphic Tablet", basePrice: 5999, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400" },
-    { name: "Smart Plug Wi-Fi Enabled", basePrice: 699, image: "https://images.unsplash.com/photo-1558002038-1055907df827?w=400" }
-  ];
+  let uidCounter = 1;
 
-  const fitnessNames = [
-    { name: "Non-Slip TPE Yoga Mat", basePrice: 699, image: "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?w=400" },
-    { name: "Adjustable Dumbbells Pair", basePrice: 2999, image: "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?w=400" },
-    { name: "Latex Resistance Bands Set", basePrice: 499, image: "https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=400" },
-    { name: "Cast Iron Kettlebell 8kg", basePrice: 1299, image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400" },
-    { name: "Digital Jump Skip Rope", basePrice: 299, image: "https://images.unsplash.com/photo-1546483875-0f014e326c48?w=400" },
-    { name: "High-Density Foam Roller", basePrice: 599, image: "https://images.unsplash.com/photo-1600881333168-2ef49b341f30?w=400" },
-    { name: "Anti-Burst Gym Fitness Ball", basePrice: 799, image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400" },
-    { name: "Heavy Duty Push-Up Bars", basePrice: 449, image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400" },
-    { name: "Double Wheel Ab Roller", basePrice: 399, image: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=400" },
-    { name: "Padded Gym Gloves for Lifting", basePrice: 349, image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400" },
-    { name: "Insulated Sports Water Bottle", basePrice: 599, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400" },
-    { name: "Hand Grip Strengthener", basePrice: 199, image: "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?w=400" },
-    { name: "Fabric Loop Exercise Bands", basePrice: 399, image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400" },
-    { name: "Ankle Weighted Straps", basePrice: 499, image: "https://images.unsplash.com/photo-1605296867304-46d5465a25f1?w=400" },
-    { name: "Foldable Exercise Bench", basePrice: 5499, image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400" },
-    { name: "Agility Ladder with Cones", basePrice: 699, image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400" },
-    { name: "Muscle Massage Gun", basePrice: 2499, image: "https://images.unsplash.com/photo-1600881333168-2ef49b341f30?w=400" },
-    { name: "Doorway Pull-Up Chin-Up Bar", basePrice: 1199, image: "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400" },
-    { name: "Under-Desk Walking Pad Treadmill", basePrice: 14999, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400" },
-    { name: "Weighted Workout Vest 10kg", basePrice: 2199, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400" }
-  ];
-
-  const groceriesNames = [
-    { name: "Premium Basmati Rice", basePrice: 149, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400" },
-    { name: "Organic Whole Wheat Atta", basePrice: 280, image: "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?w=400" },
-    { name: "Split Toor Dal (Arhar)", basePrice: 160, image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=400" },
-    { name: "Cold Pressed Mustard Oil", basePrice: 199, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400" },
-    { name: "Pure Cow Ghee Jar", basePrice: 650, image: "https://images.unsplash.com/photo-1589733901241-5e514f27b51b?w=400" },
-    { name: "Organic Turmeric Powder", basePrice: 75, image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400" },
-    { name: "Kashmiri Red Chili Powder", basePrice: 99, image: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400" },
-    { name: "Premium Garam Masala Blend", basePrice: 85, image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400" },
-    { name: "Raw Unfiltered Honey", basePrice: 299, image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400" },
-    { name: "California Almonds Value Pack", basePrice: 399, image: "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400" },
-    { name: "Whole Cashew Nuts (Kaju)", basePrice: 450, image: "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400" },
-    { name: "Organic Jaggery Powder (Gur)", basePrice: 90, image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400" },
-    { name: "Pistachios Roasted & Salted", basePrice: 420, image: "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400" },
-    { name: "Green Cardamom (Elaichi)", basePrice: 180, image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400" },
-    { name: "Cloves Whole Spice (Laung)", basePrice: 110, image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400" },
-    { name: "Premium Tea Leaves Assam", basePrice: 249, image: "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=400" },
-    { name: "Filter Coffee Powder Blend", basePrice: 280, image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400" },
-    { name: "Himalayan Pink Salt Fine", basePrice: 65, image: "https://images.unsplash.com/photo-1604838605657-622c366ff809?w=400" },
-    { name: "Organic Brown Sugar", basePrice: 120, image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400" },
-    { name: "Saffron Threads Kesar (1g)", basePrice: 350, image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400" }
-  ];
-
-  const foodNames = [
-    { name: "Masala Potato Chips Crunchy", basePrice: 40, image: "https://images.unsplash.com/photo-1566478989037-eec170784d20?w=400" },
-    { name: "Roasted Makhana Herbs & Spices", basePrice: 120, image: "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?w=400" },
-    { name: "Double Choco Chip Cookies", basePrice: 99, image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400" },
-    { name: "Instant Poha Ready Mix", basePrice: 60, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=400" },
-    { name: "Diet Methi Khakhra Crispy", basePrice: 85, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=400" },
-    { name: "Crunchy Peanut Chikki Bars", basePrice: 75, image: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=400" },
-    { name: "Assorted Mithai Sweets Box", basePrice: 499, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400" },
-    { name: "Spicy Baked Bhujia Sev", basePrice: 45, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=400" },
-    { name: "Mango Pickle Homemade Style", basePrice: 140, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=400" },
-    { name: "Mixed Fruit Jam Spread", basePrice: 115, image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400" },
-    { name: "Salted Roasted Peanuts Pack", basePrice: 50, image: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=400" },
-    { name: "Instant Oats Tomato Masala", basePrice: 130, image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400" },
-    { name: "Veg Hakka Noodles Kit", basePrice: 95, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400" },
-    { name: "Dark Chocolate Premium Bar", basePrice: 150, image: "https://images.unsplash.com/photo-1511381939415-e44015466834?w=400" },
-    { name: "Sweet Corn Soup Instant", basePrice: 45, image: "https://images.unsplash.com/photo-1547592165-e1d17f1a0655?w=400" },
-    { name: "Tomato Ketchup Squeezy Bottle", basePrice: 120, image: "https://images.unsplash.com/photo-1607305387299-a3d9611cd46f?w=400" },
-    { name: "Ready-to-Eat Dal Makhani", basePrice: 110, image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400" },
-    { name: "Ready-to-Eat Paneer Butter Masala", basePrice: 140, image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400" },
-    { name: "Premium Popcorn Kernel Pack", basePrice: 65, image: "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400" },
-    { name: "Crispy Soya Sticks Snack", basePrice: 55, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=400" }
-  ];
-
-  const clothingNames = [
-    { name: "Classic Cotton Kurta Men", basePrice: 699, image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400" },
-    { name: "Comfort Fit Crewneck T-Shirt", basePrice: 399, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400" },
-    { name: "Stretchable Slim Fit Chinos", basePrice: 1299, image: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=400" },
-    { name: "Classic Indigo Denim Jacket", basePrice: 1899, image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400" },
-    { name: "Breezy Linen Casual Shirt", basePrice: 999, image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" },
-    { name: "Traditional Silk Saree Elegant", basePrice: 2499, image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400" },
-    { name: "Printed Floral Summer Dress", basePrice: 1199, image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400" },
-    { name: "Active Dry-Fit Sports T-Shirt", basePrice: 499, image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400" },
-    { name: "High-Waist Stretch Denim Jeans", basePrice: 1499, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400" },
-    { name: "Casual Fleece Pullover Hoodie", basePrice: 1099, image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=400" },
-    { name: "Premium Silk Dupatta Scarves", basePrice: 599, image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400" },
-    { name: "Slim Fit Formal Cotton Trousers", basePrice: 1199, image: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=400" },
-    { name: "Comfortable Joggers Track Pants", basePrice: 799, image: "https://images.unsplash.com/photo-1551854838-212c50b4c184?w=400" },
-    { name: "Cargo Utility Pants 6-Pocket", basePrice: 1399, image: "https://images.unsplash.com/photo-1517423568366-8b83523034fd?w=400" },
-    { name: "Solid Polo Shirt Collar Neck", basePrice: 599, image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400" },
-    { name: "Casual Denim Shorts Rugged", basePrice: 699, image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400" },
-    { name: "Georgette Floral Printed Kurti", basePrice: 899, image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400" },
-    { name: "Woolen Blend Knit Winter Sweater", basePrice: 1299, image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400" },
-    { name: "Unisex Cotton Socks Pack of 5", basePrice: 299, image: "https://images.unsplash.com/photo-1582966772680-860e372bb558?w=400" },
-    { name: "Classic Leather Belt Formal", basePrice: 499, image: "https://images.unsplash.com/photo-1624222247344-550fb8ecfbd4?w=400" }
-  ];
-
-  let itemsPool = [];
-  let brands = [];
-  if (category === "Electronics") {
-    itemsPool = electronicsNames;
-    brands = ["Apple", "Samsung", "Sony", "Bose", "JBL", "Dell", "HP", "Lenovo", "ASUS", "OnePlus"];
-  } else if (category === "Fitness") {
-    itemsPool = fitnessNames;
-    brands = ["Nike", "Adidas", "Puma", "Reebok", "Under Armour", "Decathlon", "Optimum Nutrition", "MuscleBlaze", "CultSport"];
-  } else if (category === "Groceries") {
-    itemsPool = groceriesNames;
-    brands = ["Tata Sampann", "Aashirvaad", "Fortune", "India Gate", "Daawat", "Saffola", "Everest", "MDH", "Catch"];
-  } else if (category === "Food") {
-    itemsPool = foodNames;
-    brands = ["Haldiram's", "Bikanervala", "Britannia", "Parle", "ITC Sunfeast", "Lay's", "Kurkure", "Cadbury", "Nestle"];
-  } else if (category === "Clothing") {
-    itemsPool = clothingNames;
-    brands = ["Levi's", "Zara", "H&M", "FabIndia", "Biba", "Manyavar", "Allen Solly", "Peter England", "Raymond"];
-  }
-  const descriptions = [
-    "High quality authentic product designed for daily use and durability.",
-    "Made with premium materials. Specially curated for our valued customers.",
-    "Experience the comfort and reliability of this handcrafted select item.",
-    "Top rated product featuring advanced craftsmanship and standard specifications.",
-    "Brought to you by top local sellers. Trusted by thousands of happy customers.",
-    "Perfect choice for modern lifestyle. Safe, eco-friendly, and highly efficient."
-  ];
-  
-  const sellers = ["Dhanraj", "Vedic Stores", "Bharat Traders", "IndiRetail", "Swadeshi Co.", "Aura Sellers"];
-
-  for (let i = 0; i < count; i++) {
-    const baseItem = itemsPool[i % itemsPool.length];
-    const brand = brands[Math.floor((i * 7 + 13) % brands.length)];
-    const desc = descriptions[Math.floor((i * 11 + 3) % descriptions.length)];
-    const seller = sellers[Math.floor((i * 3 + 2) % sellers.length)];
+  categories.forEach(cat => {
+    const catBrands = brands[cat];
+    const catTypes = types[cat];
+    const keywords = unsplashKeywords[cat];
     
-    const variationMultiplier = 0.9 + ((i * 17) % 21) * 0.01;
-    const price = Math.round(baseItem.basePrice * variationMultiplier);
-    const mrp = Math.round(price * (1.2 + ((i * 13) % 4) * 0.1));
-    const rating = parseFloat((4.0 + ((i * 9) % 11) * 0.1).toFixed(1));
-    const reviews = Math.round(15 + (i * 23) % 850);
-    
-    const numStr = (i + 1).toString().padStart(3, '0');
-    // Using a more realistic naming convention for branded products
-    const name = `${brand} ${baseItem.name}`;
-    
-    products.push({
-      name,
-      category,
-      price,
-      mrp,
-      description: `${desc} Features unique specifications and reliable build.`,
-      sellerName: seller,
-      rating,
-      reviews,
-      image: baseItem.image
-    });
-  }
+    for (let i = 0; i < 50; i++) {
+      const brand = catBrands[(i * 7 + 13) % catBrands.length];
+      const type = catTypes[(i * 3 + 1) % catTypes.length];
+      const adjective = adjectives[(i * 11 + 5) % adjectives.length];
+      
+      const name = `${brand} ${adjective} ${type}`;
+      const keyword = keywords[i % keywords.length];
+      
+      let image = `https://picsum.photos/seed/${keyword}_${uidCounter}/400/400`;
+      
+      if (cat === "Laptops & Accessories" && i === 0) image = "/" + generatedFiles.electronics;
+      if (cat === "Women's Clothing" && i === 0) image = "/" + generatedFiles.fashion;
+      if (cat === "Gym Equipment" && i === 0) image = "/" + generatedFiles.gym;
+      if (cat === "Food & Groceries" && i === 0) image = "/" + generatedFiles.food;
+
+      let minPrice = 99;
+      let maxPrice = 4900;
+      if (cat === "Mobile Phones" || cat === "Laptops & Accessories") { minPrice = 5000; maxPrice = 95000; }
+      else if (cat === "Audio & Watches") { minPrice = 999; maxPrice = 25000; }
+      else if (cat === "Food & Groceries" || cat === "Beverages") { minPrice = 20; maxPrice = 900; }
+      
+      const price = Math.floor(((i * 149 + 311) % (maxPrice - minPrice))) + minPrice;
+      const mrp = price + Math.floor(((i * 73 + 127) % (price * 0.4))) + 50;
+      
+      products.push({
+        name: name,
+        category: cat,
+        price: price,
+        mrp: mrp,
+        description: `Premium high quality product from ${brand}. Features standard technical specifications and reliable durability.`,
+        sellerName: `${brand} Official Store`,
+        rating: Number((4.0 + ((i * 9) % 11) * 0.1).toFixed(1)),
+        reviews: Math.floor(((i * 23 + 47) % 850)) + 15,
+        image: image
+      });
+      uidCounter++;
+    }
+  });
 
   return products;
-};
-
-const generateAllSeedProducts = () => {
-  const categories = ["Electronics", "Fitness", "Groceries", "Food", "Clothing"];
-  let all = [];
-  categories.forEach(cat => {
-    all = all.concat(generateProductsForCategory(cat, 40));
-  });
-  return all;
 };
 
 const seedInMemory = () => {
