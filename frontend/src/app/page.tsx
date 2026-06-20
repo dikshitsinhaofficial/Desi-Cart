@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion";
 import API from "../lib/api";
 
 const heroSlides = [
@@ -23,7 +24,7 @@ const heroSlides = [
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,10 +42,16 @@ export default function Home() {
 
   const getProductsByCategory = (cat: string) => products.filter(p => p.category === cat).slice(0, 10);
 
-  const renderHorizontalList = (title: string, items: any[]) => {
+  const renderHorizontalList = (title: string, items: Record<string, unknown>[]) => {
     if (!items || items.length === 0) return null;
     return (
-      <div className="bg-white p-4 mb-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="bg-white p-4 mb-4"
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-slate-800">{title}</h2>
           <Link href={`/shop?category=${items[0]?.category || ''}`} className="text-sm text-blue-600 hover:underline">See all deals</Link>
@@ -69,7 +76,7 @@ export default function Home() {
             </Link>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -111,7 +118,12 @@ export default function Home() {
       <div className="max-w-[1500px] mx-auto px-4 -mt-20 md:-mt-40 relative z-10">
         
         {/* 4-Grid Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        >
           <div className="bg-white p-4 shadow-sm z-10 flex flex-col h-[400px]">
             <h3 className="text-xl font-bold mb-4">Up to 70% off | Clearance store</h3>
             <div className="grid grid-cols-2 gap-2 flex-1">
@@ -147,7 +159,7 @@ export default function Home() {
               <p className="text-xs text-slate-600">Discover new trends in electronics and fashion.</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Dynamic Horizontal Lists */}
         {renderHorizontalList("Today's Deals in Electronics", getProductsByCategory("Electronics"))}

@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 interface ProductCardProps {
   id: string;
@@ -11,7 +12,13 @@ interface ProductCardProps {
 
 export default function ProductCard({ id, name, price, image, category }: ProductCardProps) {
   return (
-    <div className="group relative bg-white dark:bg-slate-900/80 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="group relative bg-white dark:bg-slate-900/80 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+    >
       {/* Image */}
       <div className="relative w-full aspect-square bg-slate-50 dark:bg-slate-800/50 overflow-hidden">
         <Image
@@ -37,6 +44,6 @@ export default function ProductCard({ id, name, price, image, category }: Produc
           Add to Cart
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
