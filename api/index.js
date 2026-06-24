@@ -210,11 +210,14 @@ const Wallet = mongoose.model('Wallet', walletSchema);
 // ── Seeding Logic ──
 const seedDatabase = async () => {
   try {
-    // Delete existing products to ensure a clean seed of requested categories
-    await Product.deleteMany({});
-    const seedItems = generateAllSeedProducts();
-    await Product.insertMany(seedItems);
-    console.log(`Database seeded with ${seedItems.length} products successfully.`);
+    const count = await Product.countDocuments();
+    if (count === 0) {
+      const seedItems = generateAllSeedProducts();
+      await Product.insertMany(seedItems);
+      console.log(`Database seeded with ${seedItems.length} products.`);
+    } else {
+      console.log(`Database already has ${count} products — skipping seed.`);
+    }
   } catch (err) {
     console.error('Error seeding database:', err);
   }
@@ -372,16 +375,20 @@ app.post('/api/checkout/pay-with-wallet', async (req, res) => {
 
 // GET all products
 app.get('/api/products', async (req, res) => {
-  const { category } = req.query;
+  const { category, seller, search } = req.query;
   try {
     if (isMongoConnected) {
-      const filter = category ? { category } : {};
+      const filter = {};
+      if (category) filter.category = category;
+      if (seller) filter.sellerName = seller;
+      if (search) filter.name = { $regex: search, $options: 'i' };
       const products = await Product.find(filter);
       res.json(products);
     } else {
-      const products = category
-        ? inMemoryProducts.filter(p => p.category === category)
-        : inMemoryProducts;
+      let products = inMemoryProducts;
+      if (category) products = products.filter(p => p.category === category);
+      if (seller) products = products.filter(p => p.sellerName === seller);
+      if (search) products = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
       res.json(products);
     }
   } catch (err) {
@@ -429,6 +436,48 @@ app.delete('/api/products/:id', async (req, res) => {
       res.json({ message: 'Product deleted' });
     }
   } catch (err) { res.status(500).json({ error: 'Delete failed' }); }
+});
+
+// GET product by ID
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const product = await Product.findById(req.params.id);
+      if (!product) return res.status(404).json({ error: 'Product not found' });
+      res.json(product);
+    } else {
+      const product = inMemoryProducts.find(p => p._id === req.params.id);
+      if (!product) return res.status(404).json({ error: 'Product not found' });
+      res.json(product);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
+// GET unique sellers with product counts
+app.get('/api/sellers', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const sellers = await Product.aggregate([
+        { $group: { _id: '$sellerName', productCount: { $sum: 1 } } },
+        { $project: { name: '$_id', productCount: 1, _id: 0 } },
+        { $sort: { productCount: -1 } }
+      ]);
+      res.json(sellers);
+    } else {
+      const sellerMap = {};
+      inMemoryProducts.forEach(p => {
+        sellerMap[p.sellerName] = (sellerMap[p.sellerName] || 0) + 1;
+      });
+      const sellers = Object.entries(sellerMap)
+        .map(([name, productCount]) => ({ name, productCount }))
+        .sort((a, b) => b.productCount - a.productCount);
+      res.json(sellers);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch sellers' });
+  }
 });
 
 // GET admin stats
