@@ -1,19 +1,17 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBIojfr9v6aKCVB29F1sdSYMoQZR6JNcIQ",
+  authDomain: "desi-cart-3845f.firebaseapp.com",
+  projectId: "desi-cart-3845f",
+  storageBucket: "desi-cart-3845f.firebasestorage.app",
+  messagingSenderId: "777002406230",
+  appId: "1:777002406230:web:698c2ac44f21fb845186f7",
+  measurementId: "G-CVE54HFR5E",
 };
 
-// Prevent re-initializing on hot-reloads
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Initialize the Firebase App singleton (safe for SSR — no Auth/Firestore here)
+const app: FirebaseApp =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
 export default app;

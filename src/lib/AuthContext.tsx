@@ -14,11 +14,16 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
-  User,
+  getAuth,
+  type User,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
+import app from './firebase';
+
+// Lazily get auth & db — these must only run in the browser
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 export type UserRole = 'customer' | 'seller' | 'admin';
 
@@ -115,7 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = async () => {
     const cred = await signInWithPopup(auth, googleProvider);
-    // Check if user doc exists; if not, create as customer
     const snap = await getDoc(doc(db, 'users', cred.user.uid));
     if (!snap.exists()) {
       await setDoc(doc(db, 'users', cred.user.uid), {
