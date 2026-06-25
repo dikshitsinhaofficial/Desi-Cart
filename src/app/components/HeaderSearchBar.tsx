@@ -3,6 +3,25 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const CATEGORIES = [
+  "All Categories",
+  "Men's Clothing",
+  "Women's Clothing",
+  "Shoes",
+  "Mobile Phones",
+  "Laptops & Accessories",
+  "Audio & Watches",
+  "Gym Equipment",
+  "Sports Outdoors",
+  "Food & Groceries",
+  "Beverages",
+  "Home Decor",
+  "Beauty & Personal Care",
+  "Toys & Games",
+  "Books",
+  "Pet Supplies",
+];
+
 export default function HeaderSearchBar() {
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -24,14 +43,11 @@ export default function HeaderSearchBar() {
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
-        className="bg-slate-100 text-slate-700 text-sm px-3 border-r border-slate-300 outline-none w-auto max-w-[120px] cursor-pointer"
+        className="bg-slate-100 text-slate-700 text-sm px-3 border-r border-slate-300 outline-none w-auto max-w-[150px] cursor-pointer"
       >
-        <option>All Categories</option>
-        <option>Electronics</option>
-        <option>Fitness</option>
-        <option>Groceries</option>
-        <option>Clothing</option>
-        <option>Food</option>
+        {CATEGORIES.map(cat => (
+          <option key={cat}>{cat}</option>
+        ))}
       </select>
       <input
         type="text"

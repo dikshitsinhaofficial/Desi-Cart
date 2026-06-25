@@ -9,6 +9,25 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden font-sans">
       
+      {/* ── TRANSPARENT NAV ── */}
+      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5">
+        <Link href="/" className="text-2xl font-black tracking-tight">
+          <span className="text-white">Desi</span>
+          <span className="text-orange-400">Cart</span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors font-medium px-4 py-2">
+            Sign In
+          </Link>
+          <Link href="/shop" className="text-sm bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2 rounded-xl transition-colors shadow-lg shadow-orange-500/30">
+            Shop Now
+          </Link>
+          <Link href="/seller" className="text-sm border border-white/20 hover:border-white/50 text-slate-300 hover:text-white font-medium px-4 py-2 rounded-xl transition-all backdrop-blur-sm">
+            Seller Portal
+          </Link>
+        </div>
+      </nav>
+
       {/* ── HERO SECTION ── */}
       <section className="relative h-screen flex items-center justify-center pt-16">
         {/* Background Image */}

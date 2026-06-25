@@ -1,171 +1,232 @@
 'use client';
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import API from '../../../lib/api';
 
-// ── Types ────────────────────────────────────────────────────────────────
-interface AdminStats {
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
+import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard, Package, Users, ShoppingCart,
+  TrendingUp, Settings, IndianRupee, Store, Shield,
+  ChevronRight, Loader2
+} from 'lucide-react';
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+interface Stats {
   productCount: number;
   totalRevenue: number;
   sellerCount: number;
   storeCount: number;
 }
 
-type AdminTab = 'overview' | 'sellers' | 'fees' | 'settings';
+interface Seller {
+  name: string;
+  productCount: number;
+}
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats>({
-    productCount: 0,
-    totalRevenue: 0,
-    sellerCount: 0,
-    storeCount: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+type Tab = 'overview' | 'sellers' | 'orders' | 'settings';
+
+export default function AdminPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>('overview');
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [sellersLoading, setSellersLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/api/admin/stats`)
       .then(r => r.json())
-      .then((data: AdminStats) => setStats(data))
+      .then(d => setStats(d))
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => setStatsLoading(false));
   }, []);
 
-  const navItems: { key: AdminTab; label: string; icon: string }[] = [
-    { key: 'overview',  label: 'Overview',       icon: '📊' },
-    { key: 'sellers',   label: 'Sellers',         icon: '🏪' },
-    { key: 'fees',      label: 'Platform Fees',   icon: '💰' },
-    { key: 'settings',  label: 'Settings',        icon: '⚙️' },
+  useEffect(() => {
+    if (tab === 'sellers' && sellers.length === 0) {
+      setSellersLoading(true);
+      fetch(`${API}/api/sellers`)
+        .then(r => r.json())
+        .then(d => setSellers(d))
+        .catch(() => {})
+        .finally(() => setSellersLoading(false));
+    }
+  }, [tab, sellers.length]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+          <p className="text-slate-400 mb-6">You need admin privileges to view this page.</p>
+          <button onClick={() => router.push('/login')} className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 rounded-xl font-semibold transition-colors">
+            Sign In as Admin
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const navItems: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
+    { id: 'sellers', label: 'Sellers', icon: <Store size={18} /> },
+    { id: 'orders', label: 'Orders', icon: <ShoppingCart size={18} /> },
+    { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
+  ];
+
+  const statCards = [
+    {
+      label: 'Total Revenue', value: `₹${(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}`,
+      icon: <IndianRupee size={22} />, color: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-500/10 border-emerald-500/20'
+    },
+    {
+      label: 'Total Products', value: stats?.productCount ?? 0,
+      icon: <Package size={22} />, color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-500/10 border-blue-500/20'
+    },
+    {
+      label: 'Active Sellers', value: stats?.sellerCount ?? 0,
+      icon: <Users size={22} />, color: 'from-violet-500 to-purple-600', bg: 'bg-violet-500/10 border-violet-500/20'
+    },
+    {
+      label: 'Stores', value: stats?.storeCount ?? 0,
+      icon: <TrendingUp size={22} />, color: 'from-orange-500 to-red-500', bg: 'bg-orange-500/10 border-orange-500/20'
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex transition-colors duration-300">
-
+    <div className="flex min-h-screen bg-slate-950 text-white">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 dark:bg-gray-800 shadow-md flex flex-col transition-colors duration-300">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col items-center">
-          <Image src="/logo.png" alt="Desi Cart Logo" width={120} height={48} priority />
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-2">Super Admin</h2>
+      <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+        <div className="px-6 py-6 border-b border-slate-800">
+          <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Admin Panel</p>
+          <h2 className="text-xl font-bold">
+            <span className="text-white">Desi</span><span className="text-orange-500">Cart</span>
+          </h2>
         </div>
-
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map(item => (
             <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
-              className={`w-full text-left flex items-center gap-2 p-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === item.key
-                  ? 'bg-violet-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                tab === item.id
+                  ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <span>{item.icon}</span> {item.label}
+              {item.icon} {item.label}
+              {tab === item.id && <ChevronRight size={14} className="ml-auto" />}
             </button>
           ))}
         </nav>
-
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500">
-          {loading ? 'Loading…' : `${stats.productCount} products · ${stats.storeCount} stores`}
+        <div className="px-6 py-4 border-t border-slate-800">
+          <p className="text-xs text-slate-500">{user?.email}</p>
+          <span className="inline-block mt-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">Admin</span>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-
-        {/* ── Overview Tab ── */}
-        {activeTab === 'overview' && (
-          <div>
-            <h1 className="text-3xl font-semibold mb-6">Platform Overview</h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {[
-                {
-                  label: 'Total Revenue',
-                  value: loading ? '…' : `₹${stats.totalRevenue.toLocaleString()}`,
-                  icon: '💰',
-                  color: 'text-green-600 dark:text-green-400',
-                  bg: 'bg-green-50 dark:bg-green-900/20',
-                },
-                {
-                  label: 'Products Listed',
-                  value: loading ? '…' : stats.productCount,
-                  icon: '📦',
-                  color: 'text-violet-600 dark:text-violet-400',
-                  bg: 'bg-violet-50 dark:bg-violet-900/20',
-                },
-                {
-                  label: 'Active Sellers',
-                  value: loading ? '…' : stats.sellerCount,
-                  icon: '🏪',
-                  color: 'text-purple-600 dark:text-purple-400',
-                  bg: 'bg-purple-50 dark:bg-purple-900/20',
-                },
-                {
-                  label: 'Active Stores',
-                  value: loading ? '…' : stats.storeCount,
-                  icon: '🏬',
-                  color: 'text-orange-600 dark:text-orange-400',
-                  bg: 'bg-orange-50 dark:bg-orange-900/20',
-                },
-              ].map(card => (
-                <div
-                  key={card.label}
-                  className={`${card.bg} p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm`}
-                >
-                  <div className="text-2xl mb-2">{card.icon}</div>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{card.label}</p>
-                  <p className={`text-3xl font-bold mt-1 ${card.color}`}>{card.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Quick info banner */}
-            <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-6">
-              <h3 className="font-semibold text-violet-700 dark:text-violet-400 mb-1">ℹ️ Admin Note</h3>
-              <p className="text-sm text-violet-600 dark:text-violet-300">
-                Revenue reflects completed wallet top-up transactions. Seller and store counts are derived from
-                unique seller names registered in the product catalogue.
-              </p>
-            </div>
-          </div>
+      {/* Main */}
+      <main className="flex-1 p-8 overflow-auto">
+        {tab === 'overview' && (
+          <>
+            <h1 className="text-2xl font-bold mb-2">Dashboard Overview</h1>
+            <p className="text-slate-400 mb-8 text-sm">Welcome back! Here&apos;s your store summary.</p>
+            {statsLoading ? (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Loader2 size={18} className="animate-spin" /> Loading stats...
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                {statCards.map(card => (
+                  <div key={card.label} className={`rounded-2xl border p-5 ${card.bg}`}>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center text-white mb-4`}>
+                      {card.icon}
+                    </div>
+                    <p className="text-slate-400 text-sm">{card.label}</p>
+                    <p className="text-2xl font-bold mt-1">{card.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
-        {/* ── Sellers Tab ── */}
-        {activeTab === 'sellers' && (
-          <div>
-            <h1 className="text-3xl font-semibold mb-6">🏪 Sellers</h1>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-12 text-center text-gray-400">
-              <p className="text-5xl mb-4">🏪</p>
-              <p className="text-lg font-medium">Seller management</p>
-              <p className="text-sm mt-1">Individual seller profiles and approvals — coming soon.</p>
-            </div>
-          </div>
+        {tab === 'sellers' && (
+          <>
+            <h1 className="text-2xl font-bold mb-2">Sellers</h1>
+            <p className="text-slate-400 mb-8 text-sm">All registered sellers on the platform.</p>
+            {sellersLoading ? (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Loader2 size={18} className="animate-spin" /> Loading sellers...
+              </div>
+            ) : sellers.length === 0 ? (
+              <p className="text-slate-500">No sellers found.</p>
+            ) : (
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400">
+                      <th className="text-left px-6 py-4 font-semibold">#</th>
+                      <th className="text-left px-6 py-4 font-semibold">Seller Name</th>
+                      <th className="text-right px-6 py-4 font-semibold">Products Listed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sellers.map((s, i) => (
+                      <tr key={s.name} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4 text-slate-500">{i + 1}</td>
+                        <td className="px-6 py-4 font-medium">{s.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <span className="px-3 py-1 bg-orange-500/10 text-orange-400 rounded-full text-xs font-bold">{s.productCount}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
 
-        {/* ── Platform Fees Tab ── */}
-        {activeTab === 'fees' && (
-          <div>
-            <h1 className="text-3xl font-semibold mb-6">💰 Platform Fees</h1>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-12 text-center text-gray-400">
-              <p className="text-5xl mb-4">💰</p>
-              <p className="text-lg font-medium">Fee configuration</p>
-              <p className="text-sm mt-1">Set commission rates per category — coming soon.</p>
+        {tab === 'orders' && (
+          <>
+            <h1 className="text-2xl font-bold mb-2">Orders</h1>
+            <p className="text-slate-400 mb-8 text-sm">Order management coming soon.</p>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+              <ShoppingCart size={48} className="text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-500">Order tracking will be available in the next update.</p>
             </div>
-          </div>
+          </>
         )}
 
-        {/* ── Settings Tab ── */}
-        {activeTab === 'settings' && (
-          <div>
-            <h1 className="text-3xl font-semibold mb-6">⚙️ Settings</h1>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-12 text-center text-gray-400">
-              <p className="text-5xl mb-4">⚙️</p>
-              <p className="text-lg font-medium">Platform settings</p>
-              <p className="text-sm mt-1">Global configuration options — coming soon.</p>
+        {tab === 'settings' && (
+          <>
+            <h1 className="text-2xl font-bold mb-2">Settings</h1>
+            <p className="text-slate-400 mb-8 text-sm">Configure your platform settings.</p>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg space-y-5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Site Name</label>
+                <input defaultValue="DesiCart" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Platform Currency</label>
+                <input defaultValue="INR (₹)" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors" />
+              </div>
+              <button className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors text-sm">
+                Save Changes
+              </button>
             </div>
-          </div>
+          </>
         )}
-
       </main>
     </div>
   );
