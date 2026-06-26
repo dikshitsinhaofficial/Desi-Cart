@@ -11,7 +11,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   getAuth,
@@ -81,6 +82,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Handle redirect result from Google Sign-In
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const snap = await getDoc(doc(db, 'users', result.user.uid));
+          if (!snap.exists()) {
+            await setDoc(doc(db, 'users', result.user.uid), {
+              email: result.user.email,
+              displayName: result.user.displayName,
+              role: 'customer',
+              createdAt: new Date().toISOString(),
+            });
+          }
+          const authUser = await toAuthUser(result.user);
+          setUser(authUser);
+        }
+      })
+      .catch(() => {});
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const authUser = await toAuthUser(firebaseUser);
@@ -119,18 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    const cred = await signInWithPopup(auth, googleProvider);
-    const snap = await getDoc(doc(db, 'users', cred.user.uid));
-    if (!snap.exists()) {
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email,
-        displayName: cred.user.displayName,
-        role: 'customer',
-        createdAt: new Date().toISOString(),
-      });
-    }
-    const authUser = await toAuthUser(cred.user);
-    setUser(authUser);
+    // Redirect-based flow works on all domains including Vercel
+    await signInWithRedirect(auth, googleProvider);
+    // Result is handled in useEffect via getRedirectResult
   };
 
   const logout = async () => {
