@@ -6,6 +6,7 @@ import Script from "next/script";
 import Header from "./components/Header";
 import { AuthProvider } from "@/lib/AuthContext";
 import { CartProvider } from "@/lib/CartContext";
+import { WishlistProvider } from "@/lib/WishlistContext";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -39,18 +40,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300">
         <AuthProvider>
           <CartProvider>
-            <ThemeProvider>
-              <Header />
+            <WishlistProvider>
+              <ThemeProvider>
+                <Header />
 
-              {/* Main — full width */}
-              <main className="flex-1 bg-slate-100">
-                {children}
-              </main>
+                {/* Main — full width */}
+                <main className="flex-1 bg-slate-100 dark:bg-slate-950">
+                  {children}
+                </main>
 
-              <footer className="bg-slate-900 text-slate-300 pt-10 pb-6 text-sm mt-auto">
+                <footer className="bg-slate-900 text-slate-300 pt-10 pb-6 text-sm mt-auto">
                 <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
                   <div>
                     <h4 className="text-white font-bold mb-4">Get to Know Us</h4>
@@ -96,7 +98,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <p className="text-xs text-slate-500">© {new Date().getFullYear()} DesiCart. Inspired by global e-commerce. Built with Next.js.</p>
                 </div>
               </footer>
-            </ThemeProvider>
+              </ThemeProvider>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

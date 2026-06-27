@@ -6,13 +6,15 @@ import { useEffect, useState } from 'react';
 import HeaderSearchBar from './HeaderSearchBar';
 import { useAuth } from '@/lib/AuthContext';
 import { useCart } from '@/lib/CartContext';
-import { LogOut, User, LayoutDashboard, Store } from 'lucide-react';
+import { useWishlist } from '@/lib/WishlistContext';
+import { LogOut, User, LayoutDashboard, Store, Heart, Package } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const { wishlist } = useWishlist();
   const [showMenu, setShowMenu] = useState(false);
 
   // Set role cookie whenever user changes (used by middleware)
@@ -52,6 +54,16 @@ export default function Header() {
 
         {/* Right Menu */}
         <div className="flex items-center gap-5 text-sm font-semibold whitespace-nowrap">
+          {/* Wishlist */}
+          <Link href="/wishlist" className="relative group flex items-center gap-1 cursor-pointer">
+            <Heart className="group-hover:text-red-500 transition-colors" size={20} />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-1 -left-2 bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 rounded-full leading-none">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
+
           {/* Account */}
           <div className="relative hidden lg:block">
             <button
@@ -88,10 +100,13 @@ export default function Header() {
                       </Link>
                     )}
                     {user.role === 'seller' && (
-                      <Link href="/seller" onClick={() => setShowMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                        <Store size={15} /> Seller Dashboard
+                      <Link href="/seller" onClick={() => setShowMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-t border-slate-100">
+                        <Store size={15} /> Seller Portal
                       </Link>
                     )}
+                    <Link href="/orders" onClick={() => setShowMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-t border-slate-100">
+                      <Package size={15} /> My Orders
+                    </Link>
                     <Link href="/shop" onClick={() => setShowMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                       <User size={15} /> My Profile
                     </Link>

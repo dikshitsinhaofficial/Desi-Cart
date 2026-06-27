@@ -169,7 +169,13 @@ export default function AdminPage() {
                 <Loader2 size={18} className="animate-spin" /> Loading sellers...
               </div>
             ) : sellers.length === 0 ? (
-              <p className="text-slate-500">No sellers found.</p>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center mt-4">
+                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Store size={32} className="text-slate-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">No Sellers Found</h3>
+                <p className="text-slate-400">There are currently no active sellers on the platform.</p>
+              </div>
             ) : (
               <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
                 <table className="w-full text-sm">

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Star, Truck, ShieldCheck, ArrowLeft, Package } from 'lucide-react';
 import Link from 'next/link';
 import AddToCartButton from './AddToCartButton';
+import WishlistButton from './WishlistButton';
 
 async function getProduct(id: string) {
   try {
@@ -129,8 +130,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           </div>
 
           {/* Add to Cart — client component */}
-          <div className="mt-auto">
-            <AddToCartButton product={cartProduct} />
+          <div className="mt-auto flex items-center gap-3">
+            <div className="flex-1">
+              <AddToCartButton product={cartProduct} />
+            </div>
+            <WishlistButton product={cartProduct} />
           </div>
         </div>
       </div>

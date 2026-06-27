@@ -104,6 +104,24 @@ export default function SellerDashboard() {
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Quick validation
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Image must be less than 2MB', 'error');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setForm(prev => ({ ...prev, image: base64 }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDelete = async (_id: string) => {
     try {
       await fetch(`${API}/api/products/${_id}`, { method: 'DELETE' });
@@ -270,15 +288,33 @@ export default function SellerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Image URL</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Product Image</label>
+                  <div className="flex gap-4 mb-2">
+                    <label className="flex-1 cursor-pointer bg-slate-800 border border-slate-700 hover:border-orange-500 rounded-xl px-4 py-3 text-sm text-center transition-colors">
+                      <span className="text-orange-400 font-semibold flex items-center justify-center gap-2">
+                        <ImageIcon size={16} /> Upload File (Max 2MB)
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                  </div>
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-slate-700"></div>
+                    <span className="shrink-0 px-4 text-xs text-slate-500 uppercase tracking-widest">OR</span>
+                    <div className="flex-grow border-t border-slate-700"></div>
+                  </div>
                   <input
                     type="url"
-                    placeholder="https://images.unsplash.com/photo-..."
+                    placeholder="Paste direct image URL..."
                     value={form.image}
                     onChange={e => setForm({ ...form, image: e.target.value })}
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1.5">Paste a direct image link (e.g. from Unsplash). Real-time preview shown on the right.</p>
+                  <p className="text-[10px] text-slate-500 mt-1.5">Real-time preview shown on the right.</p>
                 </div>
 
                 <button

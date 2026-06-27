@@ -112,7 +112,7 @@ categories.forEach(cat => {
     const mrp = price + Math.floor(Math.random() * (price * 0.5)) + 100; // MRP is 10-50% higher
     
     products.push({
-      uid: `prod_${uidCounter++}`,
+      _id: `prod_${uidCounter++}`,
       name: name,
       category: cat,
       price: price,

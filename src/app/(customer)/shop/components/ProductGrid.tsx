@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Star, Zap } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Heart } from 'lucide-react';
+import { useWishlist } from '@/lib/WishlistContext';
 
 interface Product {
   uid: string;
@@ -48,6 +49,8 @@ export default function ProductGrid({
   products, totalFiltered, currentPage, totalPages,
   sortBy, setSortBy, setCurrentPage, onAddToCart, loading
 }: ProductGridProps) {
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
   return (
     <div className="flex-1 min-w-0">
       {/* Toolbar */}
@@ -112,6 +115,17 @@ export default function ProductGrid({
                     </div>
                   )}
                 </Link>
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (isInWishlist(p.uid)) removeFromWishlist(p.uid);
+                    else addToWishlist({ id: p.uid, name: p.name, price: p.price, mrp: p.mrp, image: p.image, category: p.category });
+                  }}
+                  className="absolute top-2 right-2 z-10 p-2 bg-white/80 backdrop-blur hover:bg-white rounded-full shadow-sm transition-all"
+                >
+                  <Heart size={16} className={isInWishlist(p.uid) ? "text-red-500 fill-red-500" : "text-slate-400"} />
+                </button>
 
                 <div className="p-3 flex flex-col flex-1">
                   <Link href={`/shop/${p.uid}`}>
