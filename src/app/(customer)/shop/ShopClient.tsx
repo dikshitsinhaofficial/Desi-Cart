@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { SlidersHorizontal, X, ShoppingBag, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Wallet from '../../components/Wallet';
 import API from '@/lib/api';
 import { useCart } from '@/lib/CartContext';
@@ -11,7 +13,6 @@ import FilterSidebar from './components/FilterSidebar';
 import ShopBanner from './components/ShopBanner';
 import ProductGrid from './components/ProductGrid';
 import CartDrawer from './components/CartDrawer';
-import { ShoppingBag } from 'lucide-react';
 
 interface ShopProduct {
   uid: string;
@@ -24,6 +25,28 @@ interface ShopProduct {
   image?: string;
 }
 
+// ── Toast Component ────────────────────────────────────────────
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 60, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+      className="fixed bottom-28 right-6 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold"
+    >
+      <span className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
+        <Check size={14} strokeWidth={3} />
+      </span>
+      {message}
+    </motion.div>
+  );
+}
+
 export default function ShopClient() {
   const { addToCart, cartCount } = useCart();
   const searchParams = useSearchParams();
@@ -32,16 +55,19 @@ export default function ShopClient() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [sliderMaxPrice, setSliderMaxPrice] = useState(100000);
-  
+
   const [apiProducts, setApiProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCart, setShowCart] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  
+  const [toast, setToast] = useState<string | null>(null);
+
   const [timeLeft, setTimeLeft] = useState({ hours: 0, mins: 0, secs: 0 });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
 
+  // Read URL params from header search bar
   useEffect(() => {
     const urlSearch = searchParams.get('search');
     const urlCategory = searchParams.get('category');
@@ -49,6 +75,7 @@ export default function ShopClient() {
     if (urlCategory && ['All', ...CATEGORIES].includes(urlCategory)) setCategory(urlCategory);
   }, [searchParams]);
 
+  // Countdown timer
   useEffect(() => {
     const calcTime = () => {
       const now = new Date();
@@ -77,9 +104,7 @@ export default function ShopClient() {
     } catch {}
   };
 
-  useEffect(() => {
-    fetchWallet();
-  }, []);
+  useEffect(() => { fetchWallet(); }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -107,9 +132,9 @@ export default function ShopClient() {
     if (category !== 'All') items = items.filter(p => p.category === category);
     if (search) items = items.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
     items = items.filter(p => p.price <= sliderMaxPrice);
-
     if (sortBy === 'price-low')  items.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-high') items.sort((a, b) => b.price - a.price);
+    if (sortBy === 'rating')     items.sort((a, b) => b.rating - a.rating);
     return items;
   }, [category, search, sortBy, sliderMaxPrice, apiProducts]);
 
@@ -124,23 +149,32 @@ export default function ShopClient() {
 
   const handleAddToCart = (p: ShopProduct) => {
     addToCart({ id: p.uid, ...p });
-    // Keep internal showCart if you want drawer to open on add, else just leave it
+    setToast(`${p.name.slice(0, 28)}${p.name.length > 28 ? '…' : ''} added!`);
   };
+
+  const filterSidebarProps = { category, setCategory, sliderMaxPrice, setSliderMaxPrice, totalCount: filtered.length };
 
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ShopBanner timeLeft={timeLeft} />
 
-        <div className="flex items-start gap-8 mt-8 relative">
-          <FilterSidebar
-            category={category}
-            setCategory={setCategory}
-            sliderMaxPrice={sliderMaxPrice}
-            setSliderMaxPrice={setSliderMaxPrice}
-            totalCount={filtered.length}
-          />
-          
+        {/* Mobile filter bar */}
+        <div className="flex items-center justify-between mt-6 mb-4 lg:hidden">
+          <p className="text-sm text-slate-500 font-medium">{filtered.length} products</p>
+          <button
+            onClick={() => setShowMobileFilters(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 shadow-sm hover:border-orange-400 transition-all"
+          >
+            <SlidersHorizontal size={16} className="text-orange-500" />
+            Filters {category !== 'All' && <span className="w-2 h-2 bg-orange-500 rounded-full ml-1" />}
+          </button>
+        </div>
+
+        <div className="flex items-start gap-8 relative">
+          {/* Desktop sidebar */}
+          <FilterSidebar {...filterSidebarProps} />
+
           <ProductGrid
             products={paginatedProducts}
             totalFiltered={filtered.length}
@@ -155,6 +189,48 @@ export default function ShopClient() {
         </div>
       </div>
 
+      {/* Mobile Filter Drawer */}
+      <AnimatePresence>
+        {showMobileFilters && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+              onClick={() => setShowMobileFilters(false)}
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl overflow-y-auto lg:hidden"
+            >
+              <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100 sticky top-0 bg-white">
+                <h3 className="font-bold text-slate-800">Filters</h3>
+                <button onClick={() => setShowMobileFilters(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+              {/* Reuse same filter component in mobile drawer */}
+              <div className="p-2">
+                <FilterSidebar {...filterSidebarProps} mobile />
+              </div>
+              <div className="sticky bottom-0 p-4 bg-white border-t border-slate-100">
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-orange-500/20"
+                >
+                  Show {filtered.length} Products
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Cart Drawer */}
       <CartDrawer
         showCart={showCart}
         setShowCart={setShowCart}
@@ -171,12 +247,22 @@ export default function ShopClient() {
         >
           <ShoppingBag size={24} />
           {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-white text-orange-600 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-md border-2 border-orange-500">
+            <motion.span
+              key={cartCount}
+              initial={{ scale: 1.5 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-2 -right-2 bg-white text-orange-600 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-md border-2 border-orange-500"
+            >
               {cartCount}
-            </span>
+            </motion.span>
           )}
         </button>
       </div>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      </AnimatePresence>
     </>
   );
 }

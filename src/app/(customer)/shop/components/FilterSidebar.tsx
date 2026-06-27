@@ -8,6 +8,7 @@ interface FilterSidebarProps {
   sliderMaxPrice: number;
   setSliderMaxPrice: (v: number) => void;
   totalCount: number;
+  mobile?: boolean;
 }
 
 const EMOJI_MAP: Record<string, string> = {
@@ -19,11 +20,11 @@ const EMOJI_MAP: Record<string, string> = {
 };
 
 export default function FilterSidebar({
-  category, setCategory, sliderMaxPrice, setSliderMaxPrice, totalCount
+  category, setCategory, sliderMaxPrice, setSliderMaxPrice, totalCount, mobile
 }: FilterSidebarProps) {
   return (
-    <aside className="w-56 shrink-0 hidden lg:block">
-      <div className="sticky top-24 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <aside className={mobile ? 'w-full' : 'w-56 shrink-0 hidden lg:block'}>
+      <div className={mobile ? '' : 'sticky top-24 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'}>
         {/* Header */}
         <div className="px-4 py-3 bg-slate-800 text-white">
           <h3 className="font-bold text-sm">Filters</h3>

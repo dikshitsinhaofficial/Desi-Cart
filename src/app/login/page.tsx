@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [role, setRole] = useState<UserRole>('customer');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,16 +52,26 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setError('');
-    setLoading(true);
+    setGoogleLoading(true);
     try {
       await loginWithGoogle();
-      router.push('/shop');
+      // signInWithRedirect will navigate away — loading stays visible
     } catch (err: unknown) {
       setError((err as { message?: string })?.message || 'Google sign-in failed.');
-    } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
+
+  // Full-screen overlay while Google redirect is happening
+  if (googleLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-orange-950 to-slate-900 gap-5">
+        <div className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+        <p className="text-white font-semibold text-lg">Redirecting to Google…</p>
+        <p className="text-slate-400 text-sm">You will be signed in automatically.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-orange-950 to-slate-900 p-4">

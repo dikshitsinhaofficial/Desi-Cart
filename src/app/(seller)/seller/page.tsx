@@ -55,6 +55,7 @@ export default function SellerDashboard() {
   const fetchMyProducts = async () => {
     if (!user?.email) return;
     try {
+      // Filter products by this seller's email
       const res = await fetch(`${API}/api/products?seller=${encodeURIComponent(user.email)}`);
       const data = await res.json();
       setMyProducts(data);
