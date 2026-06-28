@@ -165,6 +165,8 @@ const seedInMemory = () => {
   console.log(`In-memory database seeded with ${inMemoryProducts.length} initial products.`);
 };
 
+let inMemoryOrders = [];
+
 seedInMemory();
 
 if (!MONGO_URI || MONGO_URI.includes('<db_password>')) {
@@ -191,6 +193,12 @@ const productSchema = new mongoose.Schema({
   sellerName: { type: String, default: 'Anonymous Seller' },
   rating: { type: Number, default: 0 },
   reviews: { type: Number, default: 0 },
+  reviewList: [{
+    user: String,
+    rating: Number,
+    comment: String,
+    date: { type: Date, default: Date.now }
+  }],
   image: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
@@ -206,6 +214,28 @@ const walletSchema = new mongoose.Schema({
   }]
 });
 const Wallet = mongoose.model('Wallet', walletSchema);
+
+const orderSchema = new mongoose.Schema({
+  email: { type: String, required: true },
+  items: [{
+    productId: String,
+    name: String,
+    price: Number,
+    qty: Number,
+    image: String
+  }],
+  total: { type: Number, required: true },
+  status: { type: String, enum: ['Processing', 'In Transit', 'Delivered'], default: 'Processing' },
+  shippingAddress: {
+    fullName: String,
+    address: String,
+    city: String,
+    postalCode: String,
+    phone: String
+  },
+  createdAt: { type: Date, default: Date.now }
+});
+const Order = mongoose.model('Order', orderSchema);
 
 // ── Seeding Logic ──
 const seedDatabase = async () => {
@@ -438,6 +468,36 @@ app.delete('/api/products/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Delete failed' }); }
 });
 
+// POST a review
+app.post('/api/products/:id/reviews', async (req, res) => {
+  const { user, rating, comment } = req.body;
+  if (!user || !rating) return res.status(400).json({ error: 'Missing review details' });
+  
+  try {
+    if (isMongoConnected) {
+      const product = await Product.findById(req.params.id);
+      if (!product) return res.status(404).json({ error: 'Product not found' });
+      
+      product.reviewList.push({ user, rating: Number(rating), comment });
+      product.reviews = product.reviewList.length;
+      product.rating = product.reviewList.reduce((acc, r) => acc + r.rating, 0) / product.reviews;
+      
+      await product.save();
+      res.json(product);
+    } else {
+      const product = inMemoryProducts.find(p => p._id === req.params.id);
+      if (!product) return res.status(404).json({ error: 'Product not found' });
+      
+      if (!product.reviewList) product.reviewList = [];
+      product.reviewList.push({ user, rating: Number(rating), comment, date: new Date().toISOString() });
+      product.reviews = product.reviewList.length;
+      product.rating = product.reviewList.reduce((acc, r) => acc + r.rating, 0) / product.reviews;
+      
+      res.json(product);
+    }
+  } catch (err) { res.status(500).json({ error: 'Failed to add review' }); }
+});
+
 // GET product by ID
 app.get('/api/products/:id', async (req, res) => {
   try {
@@ -480,35 +540,108 @@ app.get('/api/sellers', async (req, res) => {
   }
 });
 
+// POST a new order
+app.post('/api/orders', async (req, res) => {
+  const { email, items, total, shippingAddress } = req.body;
+  if (!email || !items || !total) return res.status(400).json({ error: 'Missing order details' });
+
+  try {
+    if (isMongoConnected) {
+      const order = new Order({ email, items, total, shippingAddress });
+      await order.save();
+      res.status(201).json(order);
+    } else {
+      const order = {
+        _id: `ord_${Date.now()}`,
+        email, items, total, shippingAddress,
+        status: 'Processing',
+        createdAt: new Date().toISOString()
+      };
+      inMemoryOrders.unshift(order);
+      res.status(201).json(order);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
+// GET orders by user email
+app.get('/api/orders', async (req, res) => {
+  const { email } = req.query;
+  try {
+    if (isMongoConnected) {
+      const orders = await Order.find({ email }).sort({ createdAt: -1 });
+      res.json(orders);
+    } else {
+      const orders = inMemoryOrders.filter(o => o.email === email);
+      res.json(orders);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// GET all orders (Admin)
+app.get('/api/admin/orders', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const orders = await Order.find().sort({ createdAt: -1 });
+      res.json(orders);
+    } else {
+      res.json(inMemoryOrders);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch all orders' });
+  }
+});
+
+// UPDATE order status (Admin)
+app.put('/api/admin/orders/:id', async (req, res) => {
+  const { status } = req.body;
+  try {
+    if (isMongoConnected) {
+      const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+      res.json(order);
+    } else {
+      const order = inMemoryOrders.find(o => o._id === req.params.id);
+      if (order) order.status = status;
+      res.json(order);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update order' });
+  }
+});
+
 // GET admin stats
 app.get('/api/admin/stats', async (req, res) => {
   try {
     if (isMongoConnected) {
       const productCount = await Product.countDocuments();
-      const wallet = await Wallet.findOne();
-      const totalRevenue = wallet
-        ? wallet.transactions
-            .filter(t => t.type === 'purchase' && t.status === 'success')
-            .reduce((sum, t) => sum + (t.amount || 0), 0)
-        : 0;
-      const uniqueSellers = await Product.distinct('sellerName');
+      const sellers = await Product.distinct('sellerName');
+      
+      const orders = await Order.find();
+      const activeOrders = orders.filter(o => o.status !== 'Delivered').length;
+      const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0);
+
       res.json({
         productCount,
-        totalRevenue,
-        sellerCount: uniqueSellers.length,
-        storeCount: uniqueSellers.length,
+        sellerCount: sellers.length,
+        storeCount: Math.ceil(sellers.length * 1.5),
+        totalRevenue: totalRevenue || 0,
+        activeOrders
       });
     } else {
-      const productCount = inMemoryProducts.length;
-      const totalRevenue = inMemoryWallet.transactions
-        .filter(t => t.type === 'purchase' && t.status === 'success')
-        .reduce((sum, t) => sum + (t.amount || 0), 0);
-      const uniqueSellers = Array.from(new Set(inMemoryProducts.map(p => p.sellerName)));
+      const sellers = new Set(inMemoryProducts.map(p => p.sellerName));
+      
+      const activeOrders = inMemoryOrders.filter(o => o.status !== 'Delivered').length;
+      const totalRevenue = inMemoryOrders.reduce((acc, o) => acc + o.total, 0);
+
       res.json({
-        productCount,
-        totalRevenue,
-        sellerCount: uniqueSellers.length,
-        storeCount: uniqueSellers.length,
+        productCount: inMemoryProducts.length,
+        sellerCount: sellers.size,
+        storeCount: Math.ceil(sellers.size * 1.5),
+        totalRevenue: totalRevenue || 0,
+        activeOrders
       });
     }
   } catch (err) {

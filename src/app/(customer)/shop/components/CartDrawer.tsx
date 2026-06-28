@@ -64,11 +64,42 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
       zip: addressZip,
     };
 
+    const saveOrderToBackend = async (orderId: string) => {
+      try {
+        await fetch(`${API}/api/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: addressEmail,
+            items: cart.map(item => ({
+              productId: item.id,
+              name: item.name,
+              price: item.price,
+              qty: item.quantity,
+              image: item.image
+            })),
+            total: cartTotal,
+            shippingAddress: {
+              fullName: addressName,
+              address: addressStreet,
+              city: addressCity,
+              postalCode: addressZip,
+              phone: addressPhone
+            }
+          })
+        });
+      } catch (err) {
+        console.error("Order save error:", err);
+      }
+    };
+
     if (paymentMethod === 'cod') {
+      const orderId = `DC-${Math.floor(100000 + Math.random() * 900000)}`;
+      await saveOrderToBackend(orderId);
       setTimeout(() => {
         fireSuccessConfetti();
         setCompletedOrder({
-          orderId: `DC-${Math.floor(100000 + Math.random() * 900000)}`,
+          orderId,
           items: [...cart],
           total: cartTotal,
           shipping: shippingFee,
@@ -96,9 +127,11 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
           return;
         }
 
+        const orderId = `DC-${Math.floor(100000 + Math.random() * 900000)}`;
+        await saveOrderToBackend(orderId);
         fireSuccessConfetti();
         setCompletedOrder({
-          orderId: `DC-${Math.floor(100000 + Math.random() * 900000)}`,
+          orderId,
           items: [...cart],
           total: cartTotal,
           shipping: shippingFee,
@@ -157,9 +190,11 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
             });
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
+              const orderId = `DC-${Math.floor(100000 + Math.random() * 900000)}`;
+              await saveOrderToBackend(orderId);
               fireSuccessConfetti();
               setCompletedOrder({
-                orderId: `DC-${Math.floor(100000 + Math.random() * 900000)}`,
+                orderId,
                 items: [...cart],
                 total: cartTotal,
                 shipping: shippingFee,

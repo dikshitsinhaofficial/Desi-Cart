@@ -4,6 +4,8 @@ import { Star, Truck, ShieldCheck, ArrowLeft, Package } from 'lucide-react';
 import Link from 'next/link';
 import AddToCartButton from './AddToCartButton';
 import WishlistButton from './WishlistButton';
+import ReviewSection from './ReviewSection';
+import { Metadata } from 'next';
 
 async function getProduct(id: string) {
   try {
@@ -16,6 +18,20 @@ async function getProduct(id: string) {
   } catch {
     return null;
   }
+}
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const product = await getProduct(params.id);
+  if (!product) return {};
+  return {
+    title: `${product.name} | DesiCart`,
+    description: product.description || `Buy ${product.name} on DesiCart. Best local products.`,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: product.image ? [{ url: product.image }] : [],
+    }
+  };
 }
 
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
@@ -46,10 +62,10 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
         <ArrowLeft size={16} /> Back to Shop
       </Link>
 
-      <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-10">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-10">
         {/* Image */}
         <div className="w-full md:w-1/2 flex justify-center">
-          <div className="w-full max-w-md aspect-square relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center">
+          <div className="w-full max-w-md aspect-square relative bg-slate-50 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex items-center justify-center">
             {product.image ? (
               <Image src={product.image} alt={product.name} fill className="object-cover" unoptimized />
             ) : (
@@ -63,21 +79,21 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           <span className="text-orange-500 text-sm font-bold uppercase tracking-wider mb-2">
             {product.category}
           </span>
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 leading-tight">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 leading-tight">
             {product.name}
           </h1>
 
-          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 flex-wrap">
+          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-850 flex-wrap">
             {product.rating > 0 && (
               <div className="flex items-center gap-1.5">
                 <Star size={16} fill="#f59e0b" className="text-amber-400" />
-                <span className="text-sm font-bold text-slate-800">{product.rating.toFixed(1)}</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{product.rating.toFixed(1)}</span>
                 <span className="text-sm text-slate-500">({product.reviews} reviews)</span>
               </div>
             )}
             <div className="flex items-center gap-2 text-sm text-slate-500">
               Sold by:
-              <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg">
+              <span className="font-semibold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
                 {product.sellerName || 'DesiCart'}
               </span>
             </div>
@@ -86,7 +102,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           {/* Price */}
           <div className="mb-8">
             <div className="flex items-baseline gap-3 mb-1">
-              <span className="text-4xl font-black text-slate-900">
+              <span className="text-4xl font-black text-slate-900 dark:text-white">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {discPct > 0 && (
@@ -94,7 +110,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                   <span className="text-lg text-slate-400 line-through">
                     ₹{product.mrp.toLocaleString('en-IN')}
                   </span>
-                  <span className="text-sm font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg">
+                  <span className="text-sm font-bold text-red-500 bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg">
                     -{discPct}% OFF
                   </span>
                 </>
@@ -106,25 +122,25 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           {/* Description */}
           {product.description && (
             <div className="mb-8">
-              <h3 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wider">Description</h3>
-              <p className="text-slate-600 leading-relaxed">{product.description}</p>
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 text-sm uppercase tracking-wider">Description</h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{product.description}</p>
             </div>
           )}
 
           {/* Trust badges */}
           <div className="grid grid-cols-2 gap-3 mb-8">
-            <div className="bg-emerald-50 rounded-xl p-3 flex items-center gap-3 border border-emerald-100">
+            <div className="bg-emerald-50 dark:bg-emerald-500/5 rounded-xl p-3 flex items-center gap-3 border border-emerald-100 dark:border-emerald-500/10">
               <ShieldCheck size={20} className="text-emerald-500 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-emerald-900">1 Year Warranty</p>
-                <p className="text-[10px] text-emerald-700">Brand authorized</p>
+                <p className="text-xs font-bold text-emerald-900 dark:text-emerald-400">1 Year Warranty</p>
+                <p className="text-[10px] text-emerald-700 dark:text-emerald-500/80">Brand authorized</p>
               </div>
             </div>
-            <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-3 border border-blue-100">
+            <div className="bg-blue-50 dark:bg-blue-500/5 rounded-xl p-3 flex items-center gap-3 border border-blue-100 dark:border-blue-500/10">
               <Truck size={20} className="text-blue-500 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-blue-900">Free Delivery</p>
-                <p className="text-[10px] text-blue-700">On orders above ₹1000</p>
+                <p className="text-xs font-bold text-blue-900 dark:text-blue-400">Free Delivery</p>
+                <p className="text-[10px] text-blue-700 dark:text-blue-500/80">On orders above ₹1000</p>
               </div>
             </div>
           </div>
@@ -138,6 +154,8 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           </div>
         </div>
       </div>
+
+      <ReviewSection productId={params.id} initialReviews={product.reviewList || []} initialRating={product.rating || 0} />
     </div>
   );
 }

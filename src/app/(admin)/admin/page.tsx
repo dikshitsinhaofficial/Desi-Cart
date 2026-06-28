@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Package, Users, ShoppingCart,
   TrendingUp, Settings, IndianRupee, Store, Shield,
-  ChevronRight, Loader2
+  ChevronRight, Loader2, RefreshCw
 } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -16,11 +16,35 @@ interface Stats {
   totalRevenue: number;
   sellerCount: number;
   storeCount: number;
+  activeOrders?: number;
 }
 
 interface Seller {
   name: string;
   productCount: number;
+}
+
+interface OrderItem {
+  productId: string;
+  name: string;
+  price: number;
+  qty: number;
+}
+
+interface Order {
+  _id: string;
+  email: string;
+  total: number;
+  status: 'Processing' | 'In Transit' | 'Delivered';
+  createdAt: string;
+  items: OrderItem[];
+  shippingAddress?: {
+    fullName: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    phone: string;
+  };
 }
 
 type Tab = 'overview' | 'sellers' | 'orders' | 'settings';
@@ -31,15 +55,22 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
   const [sellers, setSellers] = useState<Seller[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [sellersLoading, setSellersLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchStats = () => {
+    setStatsLoading(true);
     fetch(`${API}/api/admin/stats`)
       .then(r => r.json())
       .then(d => setStats(d))
       .catch(() => {})
       .finally(() => setStatsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStats();
   }, []);
 
   useEffect(() => {
@@ -51,7 +82,32 @@ export default function AdminPage() {
         .catch(() => {})
         .finally(() => setSellersLoading(false));
     }
+    
+    if (tab === 'orders') {
+      setOrdersLoading(true);
+      fetch(`${API}/api/admin/orders`)
+        .then(r => r.json())
+        .then(d => setOrders(d))
+        .catch(() => {})
+        .finally(() => setOrdersLoading(false));
+    }
   }, [tab, sellers.length]);
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`${API}/api/admin/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus as any } : o));
+        fetchStats();
+      }
+    } catch (err) {
+      alert('Failed to update status');
+    }
+  };
 
   if (loading) {
     return (
@@ -97,7 +153,7 @@ export default function AdminPage() {
       icon: <Users size={22} />, color: 'from-violet-500 to-purple-600', bg: 'bg-violet-500/10 border-violet-500/20'
     },
     {
-      label: 'Stores', value: stats?.storeCount ?? 0,
+      label: 'Active Orders', value: stats?.activeOrders ?? 0,
       icon: <TrendingUp size={22} />, color: 'from-orange-500 to-red-500', bg: 'bg-orange-500/10 border-orange-500/20'
     },
   ];
@@ -124,9 +180,9 @@ export default function AdminPage() {
               }`}
             >
               {item.icon} {item.label}
-              {tab === item.id && <ChevronRight size={14} className="ml-auto" />}
+              {tab === item.id && <ChevronRight size={14} className="ml-auto" />}\
             </button>
-          ))}
+          ))}\
         </nav>
         <div className="px-6 py-4 border-t border-slate-800">
           <p className="text-xs text-slate-500">{user?.email}</p>
@@ -205,12 +261,81 @@ export default function AdminPage() {
 
         {tab === 'orders' && (
           <>
-            <h1 className="text-2xl font-bold mb-2">Orders</h1>
-            <p className="text-slate-400 mb-8 text-sm">Order management coming soon.</p>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
-              <ShoppingCart size={48} className="text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-500">Order tracking will be available in the next update.</p>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h1 className="text-2xl font-bold">Orders</h1>
+                <p className="text-slate-400 text-sm">Manage and track all customer orders.</p>
+              </div>
+              <button onClick={() => {
+                setOrdersLoading(true);
+                fetch(`${API}/api/admin/orders`).then(r => r.json()).then(d => setOrders(d)).finally(() => setOrdersLoading(false));
+              }} className="p-2 hover:bg-slate-800 rounded-xl transition-colors">
+                <RefreshCw size={18} className={ordersLoading ? 'animate-spin text-orange-500' : ''} />
+              </button>
             </div>
+            
+            {ordersLoading ? (
+              <div className="flex items-center gap-2 text-slate-400 mt-6">
+                <Loader2 size={18} className="animate-spin" /> Loading orders...
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center mt-6">
+                <ShoppingCart size={48} className="text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-500">No orders have been placed on the platform yet.</p>
+              </div>
+            ) : (
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden mt-6">
+                <table className="w-full text-sm text-slate-300">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50">
+                      <th className="text-left px-6 py-4 font-semibold">Order ID</th>
+                      <th className="text-left px-6 py-4 font-semibold">Customer</th>
+                      <th className="text-left px-6 py-4 font-semibold">Items</th>
+                      <th className="text-left px-6 py-4 font-semibold">Total</th>
+                      <th className="text-left px-6 py-4 font-semibold">Status</th>
+                      <th className="text-right px-6 py-4 font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map(o => (
+                      <tr key={o._id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4 font-bold text-slate-100 truncate max-w-[120px]">{o._id}</td>
+                        <td className="px-6 py-4 font-medium">{o.email}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-0.5 max-w-[200px]">
+                            {o.items.map((it, idx) => (
+                              <span key={idx} className="truncate text-xs text-slate-400">
+                                {it.name} <strong className="text-slate-200">x{it.qty}</strong>
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-black text-slate-100">₹{o.total.toLocaleString('en-IN')}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${
+                            o.status === 'Delivered' ? 'bg-emerald-500/10 text-emerald-400' :
+                            o.status === 'In Transit' ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'
+                          }`}>
+                            {o.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <select
+                            value={o.status}
+                            onChange={(e) => updateOrderStatus(o._id, e.target.value)}
+                            className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer"
+                          >
+                            <option value="Processing">Processing</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Delivered">Delivered</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </>
         )}
 
