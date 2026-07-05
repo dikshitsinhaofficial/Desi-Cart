@@ -54,7 +54,9 @@ export default function ShopClient() {
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('featured');
-  const [sliderMaxPrice, setSliderMaxPrice] = useState(100000);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   const [apiProducts, setApiProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,8 +73,12 @@ export default function ShopClient() {
   useEffect(() => {
     const urlSearch = searchParams.get('search');
     const urlCategory = searchParams.get('category');
-    if (urlSearch) setSearch(urlSearch);
-    if (urlCategory && ['All', ...CATEGORIES].includes(urlCategory)) setCategory(urlCategory);
+    setSearch(urlSearch || '');
+    if (urlCategory && ['All', ...CATEGORIES].includes(urlCategory)) {
+      setCategory(urlCategory);
+    } else {
+      setCategory('All');
+    }
   }, [searchParams]);
 
   // Countdown timer
@@ -106,9 +112,17 @@ export default function ShopClient() {
 
   useEffect(() => { fetchWallet(); }, []);
 
+  // Fetch filtered products from API
   useEffect(() => {
     setLoading(true);
-    fetch(`${API}/api/products`)
+    const params = new URLSearchParams();
+    if (category !== 'All') params.set('category', category);
+    if (search) params.set('search', search);
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+    if (selectedBrands.length > 0) params.set('brands', selectedBrands.join(','));
+
+    fetch(`${API}/api/products?${params.toString()}`)
       .then(r => r.json())
       .then((data: Array<any>) => {
         const mapped: ShopProduct[] = data.map(p => ({
@@ -125,34 +139,35 @@ export default function ShopClient() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [category, search, minPrice, maxPrice, selectedBrands]);
 
-  const filtered = useMemo(() => {
+  // Client side sorting
+  const sorted = useMemo(() => {
     let items = [...apiProducts];
-    if (category !== 'All') items = items.filter(p => p.category === category);
-    if (search) items = items.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-    items = items.filter(p => p.price <= sliderMaxPrice);
     if (sortBy === 'price-low')  items.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-high') items.sort((a, b) => b.price - a.price);
     if (sortBy === 'rating')     items.sort((a, b) => b.rating - a.rating);
     return items;
-  }, [category, search, sortBy, sliderMaxPrice, apiProducts]);
+  }, [sortBy, apiProducts]);
 
-  useEffect(() => setCurrentPage(1), [category, search, sliderMaxPrice]);
+  useEffect(() => setCurrentPage(1), [category, search, minPrice, maxPrice, selectedBrands]);
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filtered.slice(startIndex, startIndex + itemsPerPage);
-  }, [filtered, currentPage]);
+    return sorted.slice(startIndex, startIndex + itemsPerPage);
+  }, [sorted, currentPage]);
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const totalPages = Math.ceil(sorted.length / itemsPerPage);
 
   const handleAddToCart = (p: ShopProduct) => {
     addToCart({ id: p.uid, ...p });
     setToast(`${p.name.slice(0, 28)}${p.name.length > 28 ? '…' : ''} added!`);
   };
 
-  const filterSidebarProps = { category, setCategory, sliderMaxPrice, setSliderMaxPrice, totalCount: filtered.length };
+  const filterSidebarProps = { 
+    category, setCategory, minPrice, setMinPrice, maxPrice, setMaxPrice, 
+    selectedBrands, setSelectedBrands, totalCount: sorted.length 
+  };
 
   return (
     <>
@@ -161,13 +176,13 @@ export default function ShopClient() {
 
         {/* Mobile filter bar */}
         <div className="flex items-center justify-between mt-6 mb-4 lg:hidden">
-          <p className="text-sm text-slate-500 font-medium">{filtered.length} products</p>
+          <p className="text-sm text-slate-500 font-medium">{sorted.length} products</p>
           <button
             onClick={() => setShowMobileFilters(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 shadow-sm hover:border-orange-400 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-750 dark:text-slate-250 shadow-sm hover:border-orange-400 transition-all animate-fade-in"
           >
             <SlidersHorizontal size={16} className="text-orange-500" />
-            Filters {category !== 'All' && <span className="w-2 h-2 bg-orange-500 rounded-full ml-1" />}
+            Filters {(category !== 'All' || minPrice || maxPrice || selectedBrands.length > 0) && <span className="w-2 h-2 bg-orange-500 rounded-full ml-1" />}
           </button>
         </div>
 
@@ -177,7 +192,7 @@ export default function ShopClient() {
 
           <ProductGrid
             products={paginatedProducts}
-            totalFiltered={filtered.length}
+            totalFiltered={sorted.length}
             currentPage={currentPage}
             totalPages={totalPages}
             sortBy={sortBy}
@@ -197,7 +212,7 @@ export default function ShopClient() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
               onClick={() => setShowMobileFilters(false)}
             />
             <motion.div
@@ -205,24 +220,25 @@ export default function ShopClient() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl overflow-y-auto lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-slate-900 shadow-2xl overflow-y-auto lg:hidden flex flex-col"
             >
-              <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100 sticky top-0 bg-white">
-                <h3 className="font-bold text-slate-800">Filters</h3>
-                <button onClick={() => setShowMobileFilters(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10 shrink-0">
+                <h3 className="font-bold text-slate-850 dark:text-white">Filters</h3>
+                <button onClick={() => setShowMobileFilters(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
                   <X size={18} />
                 </button>
               </div>
-              {/* Reuse same filter component in mobile drawer */}
-              <div className="p-2">
+              
+              <div className="p-3 flex-grow overflow-y-auto">
                 <FilterSidebar {...filterSidebarProps} mobile />
               </div>
-              <div className="sticky bottom-0 p-4 bg-white border-t border-slate-100">
+              
+              <div className="sticky bottom-0 p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-850 shrink-0">
                 <button
                   onClick={() => setShowMobileFilters(false)}
-                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-orange-500/20"
+                  className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-orange-500/25"
                 >
-                  Show {filtered.length} Products
+                  Show {sorted.length} Products
                 </button>
               </div>
             </motion.div>

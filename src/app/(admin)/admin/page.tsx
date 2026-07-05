@@ -60,20 +60,45 @@ export default function AdminPage() {
   const [sellersLoading, setSellersLoading] = useState(false);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
+  const getAuthHeaders = () => {
+    return {
+      'Authorization': `Bearer ${user?.role || 'admin'}_${user?.email}`
+    };
+  };
+
   const fetchStats = () => {
+    if (!user) return;
     setStatsLoading(true);
-    fetch(`${API}/api/admin/stats`)
+    fetch(`${API}/api/admin/stats`, {
+      headers: getAuthHeaders()
+    })
       .then(r => r.json())
       .then(d => setStats(d))
       .catch(() => {})
       .finally(() => setStatsLoading(false));
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const fetchOrders = () => {
+    if (!user) return;
+    setOrdersLoading(true);
+    fetch(`${API}/api/admin/orders`, {
+      headers: getAuthHeaders()
+    })
+      .then(r => r.json())
+      .then(d => setOrders(d))
+      .catch(() => {})
+      .finally(() => setOrdersLoading(false));
+  };
 
   useEffect(() => {
+    if (!loading && user && user.role === 'admin') {
+      fetchStats();
+    }
+  }, [user, loading]);
+
+  useEffect(() => {
+    if (!user) return;
+
     if (tab === 'sellers' && sellers.length === 0) {
       setSellersLoading(true);
       fetch(`${API}/api/sellers`)
@@ -84,20 +109,18 @@ export default function AdminPage() {
     }
     
     if (tab === 'orders') {
-      setOrdersLoading(true);
-      fetch(`${API}/api/admin/orders`)
-        .then(r => r.json())
-        .then(d => setOrders(d))
-        .catch(() => {})
-        .finally(() => setOrdersLoading(false));
+      fetchOrders();
     }
-  }, [tab, sellers.length]);
+  }, [tab, sellers.length, user]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const res = await fetch(`${API}/api/admin/orders/${orderId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
@@ -266,10 +289,7 @@ export default function AdminPage() {
                 <h1 className="text-2xl font-bold">Orders</h1>
                 <p className="text-slate-400 text-sm">Manage and track all customer orders.</p>
               </div>
-              <button onClick={() => {
-                setOrdersLoading(true);
-                fetch(`${API}/api/admin/orders`).then(r => r.json()).then(d => setOrders(d)).finally(() => setOrdersLoading(false));
-              }} className="p-2 hover:bg-slate-800 rounded-xl transition-colors">
+              <button onClick={fetchOrders} className="p-2 hover:bg-slate-800 rounded-xl transition-colors">
                 <RefreshCw size={18} className={ordersLoading ? 'animate-spin text-orange-500' : ''} />
               </button>
             </div>

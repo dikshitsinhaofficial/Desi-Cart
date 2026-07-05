@@ -255,6 +255,59 @@ const seedDatabase = async () => {
 
 // ── API Routes ──
 
+// Auth verification middleware (simulated for localhost development, easily swappable for production)
+const checkAuth = (requiredRole) => (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+  const token = authHeader.split(' ')[1]; // Format: role_email
+  const [role, email] = token.split('_');
+  if (!role || !email) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
+  if (requiredRole && role !== requiredRole && role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
+  }
+  req.user = { role, email };
+  next();
+};
+
+// GET search suggestions
+app.get('/api/products/suggestions', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.json([]);
+  
+  try {
+    const query = String(q).toLowerCase();
+    if (isMongoConnected) {
+      const products = await Product.find({
+        $or: [
+          { name: { $regex: query, $options: 'i' } },
+          { category: { $regex: query, $options: 'i' } }
+        ]
+      }).limit(8);
+      res.json(products.map(p => ({
+        _id: p._id,
+        name: p.name,
+        category: p.category
+      })));
+    } else {
+      const matches = inMemoryProducts.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.category.toLowerCase().includes(query)
+      ).slice(0, 8);
+      res.json(matches.map(p => ({
+        _id: p._id,
+        name: p.name,
+        category: p.category
+      })));
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch suggestions' });
+  }
+});
+
 // GET Wallet Balance
 app.get('/api/wallet', async (req, res) => {
   try {
@@ -405,13 +458,22 @@ app.post('/api/checkout/pay-with-wallet', async (req, res) => {
 
 // GET all products
 app.get('/api/products', async (req, res) => {
-  const { category, seller, search } = req.query;
+  const { category, seller, search, minPrice, maxPrice, brands } = req.query;
   try {
     if (isMongoConnected) {
       const filter = {};
       if (category) filter.category = category;
       if (seller) filter.sellerName = seller;
       if (search) filter.name = { $regex: search, $options: 'i' };
+      if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+      }
+      if (brands) {
+        const brandList = brands.split(',').map(b => b.trim());
+        filter.$or = brandList.map(brand => ({ name: { $regex: `^${brand}\\b`, $options: 'i' } }));
+      }
       const products = await Product.find(filter);
       res.json(products);
     } else {
@@ -419,6 +481,15 @@ app.get('/api/products', async (req, res) => {
       if (category) products = products.filter(p => p.category === category);
       if (seller) products = products.filter(p => p.sellerName === seller);
       if (search) products = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+      if (minPrice) products = products.filter(p => p.price >= Number(minPrice));
+      if (maxPrice) products = products.filter(p => p.price <= Number(maxPrice));
+      if (brands) {
+        const brandList = brands.split(',').map(b => b.trim().toLowerCase());
+        products = products.filter(p => {
+          const nameLower = p.name.toLowerCase();
+          return brandList.some(brand => nameLower.startsWith(brand + ' ') || nameLower === brand);
+        });
+      }
       res.json(products);
     }
   } catch (err) {
@@ -427,7 +498,7 @@ app.get('/api/products', async (req, res) => {
 });
 
 // POST add a new product
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', checkAuth('seller'), async (req, res) => {
   const { name, category, price, mrp, description, sellerName, image } = req.body;
   if (!name || !category || !price) return res.status(400).json({ error: 'Required fields missing' });
   try {
@@ -456,7 +527,7 @@ app.post('/api/products', async (req, res) => {
 });
 
 // DELETE a product
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', checkAuth('seller'), async (req, res) => {
   try {
     if (isMongoConnected) {
       await Product.findByIdAndDelete(req.params.id);
@@ -582,7 +653,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 // GET all orders (Admin)
-app.get('/api/admin/orders', async (req, res) => {
+app.get('/api/admin/orders', checkAuth('admin'), async (req, res) => {
   try {
     if (isMongoConnected) {
       const orders = await Order.find().sort({ createdAt: -1 });
@@ -596,7 +667,7 @@ app.get('/api/admin/orders', async (req, res) => {
 });
 
 // UPDATE order status (Admin)
-app.put('/api/admin/orders/:id', async (req, res) => {
+app.put('/api/admin/orders/:id', checkAuth('admin'), async (req, res) => {
   const { status } = req.body;
   try {
     if (isMongoConnected) {
@@ -613,7 +684,7 @@ app.put('/api/admin/orders/:id', async (req, res) => {
 });
 
 // GET admin stats
-app.get('/api/admin/stats', async (req, res) => {
+app.get('/api/admin/stats', checkAuth('admin'), async (req, res) => {
   try {
     if (isMongoConnected) {
       const productCount = await Product.countDocuments();

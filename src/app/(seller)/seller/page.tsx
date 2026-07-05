@@ -88,7 +88,10 @@ export default function SellerDashboard() {
     try {
       const res = await fetch(`${API}/api/products`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.role || 'seller'}_${user?.email}`
+        },
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error();
@@ -124,7 +127,12 @@ export default function SellerDashboard() {
 
   const handleDelete = async (_id: string) => {
     try {
-      await fetch(`${API}/api/products/${_id}`, { method: 'DELETE' });
+      await fetch(`${API}/api/products/${_id}`, { 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user?.role || 'seller'}_${user?.email}`
+        }
+      });
       showToast('Product removed');
       fetchMyProducts();
       fetchStats();

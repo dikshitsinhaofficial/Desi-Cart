@@ -65,20 +65,27 @@ export default function Header() {
           </Link>
 
           {/* Account */}
-          <div className="relative hidden lg:block">
+          <div className="relative">
             <button
               onClick={() => setShowMenu(p => !p)}
-              className="flex flex-col cursor-pointer group text-left"
+              className="flex items-center gap-1 cursor-pointer group text-left"
             >
-              <span className="text-xs font-normal text-slate-300 leading-none">
-                Hello, {firstName}
-              </span>
-              <span className="leading-none mt-1 flex items-center gap-0.5">
-                Account &amp; Lists
-                <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
+              {/* Desktop view */}
+              <div className="hidden lg:flex flex-col">
+                <span className="text-xs font-normal text-slate-300 leading-none">
+                  Hello, {firstName}
+                </span>
+                <span className="leading-none mt-1 flex items-center gap-0.5">
+                  Account &amp; Lists
+                  <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+              {/* Mobile view */}
+              <div className="lg:hidden p-1.5 hover:bg-slate-800 rounded-full transition-colors text-white">
+                <User size={20} />
+              </div>
             </button>
 
             {/* Dropdown */}
