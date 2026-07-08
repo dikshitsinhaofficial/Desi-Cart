@@ -222,7 +222,9 @@ const orderSchema = new mongoose.Schema({
     name: String,
     price: Number,
     qty: Number,
-    image: String
+    image: String,
+    sellerName: String,
+    status: { type: String, enum: ['Processing', 'In Transit', 'Delivered'], default: 'Processing' }
   }],
   total: { type: Number, required: true },
   status: { type: String, enum: ['Processing', 'In Transit', 'Delivered'], default: 'Processing' },
@@ -233,6 +235,9 @@ const orderSchema = new mongoose.Schema({
     postalCode: String,
     phone: String
   },
+  razorpayOrderId: String,
+  razorpayPaymentId: String,
+  razorpaySignature: String,
   createdAt: { type: Date, default: Date.now }
 });
 const Order = mongoose.model('Order', orderSchema);
@@ -611,20 +616,65 @@ app.get('/api/sellers', async (req, res) => {
   }
 });
 
+// POST /api/payment/razorpay-order
+app.post('/api/payment/razorpay-order', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const options = {
+      amount: amount * 100, // amount in paise
+      currency: "INR",
+      receipt: `rcpt_${Date.now()}`
+    };
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create Razorpay order' });
+  }
+});
+
 // POST a new order
 app.post('/api/orders', async (req, res) => {
-  const { email, items, total, shippingAddress } = req.body;
+  const { email, items, total, shippingAddress, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
   if (!email || !items || !total) return res.status(400).json({ error: 'Missing order details' });
 
+  // Verify Razorpay signature if provided
+  if (razorpayPaymentId && razorpayOrderId && razorpaySignature) {
+    const generatedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret')
+      .update(razorpayOrderId + "|" + razorpayPaymentId)
+      .digest('hex');
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({ error: 'Invalid payment signature' });
+    }
+  }
+
   try {
+    let enrichedItems = [];
     if (isMongoConnected) {
-      const order = new Order({ email, items, total, shippingAddress });
+      const productIds = items.map(i => i.productId);
+      const products = await Product.find({ _id: { $in: productIds } });
+      enrichedItems = items.map(item => {
+        const prod = products.find(p => p._id.toString() === item.productId);
+        return { ...item, sellerName: prod ? prod.sellerName : 'DesiCart', status: 'Processing' };
+      });
+    } else {
+      enrichedItems = items.map(item => {
+        const prod = inMemoryProducts.find(p => p._id === item.productId);
+        return { ...item, sellerName: prod ? prod.sellerName : 'DesiCart', status: 'Processing' };
+      });
+    }
+
+    if (isMongoConnected) {
+      const order = new Order({ 
+        email, items: enrichedItems, total, shippingAddress,
+        razorpayOrderId, razorpayPaymentId, razorpaySignature
+      });
       await order.save();
       res.status(201).json(order);
     } else {
       const order = {
         _id: `ord_${Date.now()}`,
-        email, items, total, shippingAddress,
+        email, items: enrichedItems, total, shippingAddress,
+        razorpayOrderId, razorpayPaymentId, razorpaySignature,
         status: 'Processing',
         createdAt: new Date().toISOString()
       };
@@ -633,6 +683,60 @@ app.post('/api/orders', async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
+// GET seller specific orders
+app.get('/api/seller/orders', checkAuth, async (req, res) => {
+  if (req.user.role !== 'seller') return res.status(403).json({ error: 'Access denied' });
+  const sellerEmail = req.user.email;
+  
+  try {
+    if (isMongoConnected) {
+      const orders = await Order.find({ 'items.sellerName': sellerEmail }).sort({ createdAt: -1 });
+      res.json(orders);
+    } else {
+      const orders = inMemoryOrders.filter(o => o.items.some(i => i.sellerName === sellerEmail));
+      res.json(orders);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch seller orders' });
+  }
+});
+
+// PUT update seller's item status in an order
+app.put('/api/seller/orders/:id/status', checkAuth, async (req, res) => {
+  if (req.user.role !== 'seller') return res.status(403).json({ error: 'Access denied' });
+  const sellerEmail = req.user.email;
+  const { status } = req.body;
+  
+  try {
+    if (isMongoConnected) {
+      const order = await Order.findById(req.params.id);
+      if (!order) return res.status(404).json({ error: 'Order not found' });
+      
+      let updated = false;
+      order.items.forEach(item => {
+        if (item.sellerName === sellerEmail) {
+          item.status = status;
+          updated = true;
+        }
+      });
+      if (updated) await order.save();
+      res.json(order);
+    } else {
+      const order = inMemoryOrders.find(o => o._id === req.params.id);
+      if (!order) return res.status(404).json({ error: 'Order not found' });
+      
+      order.items.forEach(item => {
+        if (item.sellerName === sellerEmail) {
+          item.status = status;
+        }
+      });
+      res.json(order);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update order status' });
   }
 });
 

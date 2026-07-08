@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import API from '../../../lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { CATEGORIES } from '@/app/data/products';
-import { Shield, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Shield, Loader2, Image as ImageIcon, ShoppingCart, RefreshCw } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface Product {
@@ -26,7 +26,7 @@ interface SellerStats {
   totalSales: number;
 }
 
-type ActiveTab = 'dashboard' | 'add' | 'products';
+type ActiveTab = 'dashboard' | 'add' | 'products' | 'orders';
 
 export default function SellerDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -38,6 +38,8 @@ export default function SellerDashboard() {
     name: '', category: CATEGORIES[0], price: '', mrp: '', description: '', sellerName: '', image: '',
   });
   const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
@@ -74,10 +76,46 @@ export default function SellerDashboard() {
     }
   };
 
+  const fetchOrders = async () => {
+    if (!user?.email) return;
+    setOrdersLoading(true);
+    try {
+      const res = await fetch(`${API}/api/seller/orders`, {
+        headers: { 'Authorization': `Bearer ${user?.role || 'seller'}_${user?.email}` }
+      });
+      const data = await res.json();
+      setOrders(data);
+    } catch {
+      showToast('Could not fetch orders', 'error');
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      const res = await fetch(`${API}/api/seller/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.role || 'seller'}_${user?.email}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!res.ok) throw new Error();
+      showToast('Order status updated');
+      fetchOrders();
+      fetchStats();
+    } catch {
+      showToast('Failed to update status', 'error');
+    }
+  };
+
   useEffect(() => {
     if (user && user.role === 'seller') {
       fetchMyProducts();
       fetchStats();
+      fetchOrders();
     }
   }, [user]);
 
@@ -168,6 +206,7 @@ export default function SellerDashboard() {
     { key: 'dashboard', label: 'Dashboard',   icon: '📊' },
     { key: 'add',       label: 'Add Product', icon: '➕' },
     { key: 'products',  label: 'My Products', icon: '📦' },
+    { key: 'orders',    label: 'Orders',      icon: '🛒' },
   ];
 
   return (
@@ -409,6 +448,78 @@ export default function SellerDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Orders Tab ── */}
+        {activeTab === 'orders' && (
+          <div>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-2xl font-bold text-white mb-1">Customer Orders</h1>
+                <p className="text-slate-400 text-sm">Manage fulfillment for items you've sold.</p>
+              </div>
+              <button onClick={fetchOrders} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">
+                <RefreshCw size={18} className={ordersLoading ? 'animate-spin text-orange-500' : 'text-slate-300'} />
+              </button>
+            </div>
+
+            {ordersLoading ? (
+              <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-orange-500 animate-spin" /></div>
+            ) : orders.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl text-center py-20 text-slate-500">
+                <div className="text-6xl mb-4">🛒</div>
+                <p className="text-xl font-bold text-slate-300 mb-2">No orders yet</p>
+                <p className="text-sm">When customers buy your products, they will appear here.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map(order => {
+                  const myItems = order.items.filter((i: any) => i.sellerName === user?.email);
+                  if (myItems.length === 0) return null;
+                  
+                  return (
+                    <div key={order._id} className="bg-slate-900 rounded-2xl p-6 border border-slate-800">
+                      <div className="flex justify-between items-start mb-4 border-b border-slate-800 pb-4">
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Order ID: {order._id}</p>
+                          <p className="font-semibold text-white">{order.shippingAddress?.fullName || order.email}</p>
+                          <p className="text-sm text-slate-400">{order.shippingAddress?.city}, {order.shippingAddress?.postalCode}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-500 mb-1">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {myItems.map((item: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-slate-800 rounded flex items-center justify-center shrink-0">
+                                {item.image ? <Image src={item.image} alt="" width={40} height={40} className="rounded object-cover" unoptimized/> : '📦'}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-white line-clamp-1">{item.name}</p>
+                                <p className="text-xs text-slate-400">Qty: {item.qty} × ₹{item.price.toLocaleString()}</p>
+                              </div>
+                            </div>
+                            <select
+                              value={item.status || 'Processing'}
+                              onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                              className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-orange-500 cursor-pointer"
+                            >
+                              <option value="Processing">Processing</option>
+                              <option value="In Transit">In Transit</option>
+                              <option value="Delivered">Delivered</option>
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

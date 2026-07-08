@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 import Image from 'next/image';
 import { ShieldCheck, Truck, Lock, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import Script from 'next/script';
 
 export default function CheckoutPage() {
   const { cart, cartTotal, clearCart } = useCart();
@@ -42,34 +43,72 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
     try {
-      const payload = {
-        email: user?.email,
-        items: cart.map(c => ({
-          productId: c.id,
-          name: c.name,
-          price: c.price,
-          qty: c.qty,
-          image: c.image
-        })),
-        total: cartTotal,
-        shippingAddress: address
-      };
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders`, {
+      const rzpRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/payment/razorpay-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ amount: cartTotal })
       });
-      
-      if (!res.ok) throw new Error('Failed to create order');
-      const data = await res.json();
-      
-      setOrderId(data._id);
-      setOrderSuccess(true);
-      clearCart();
+      if (!rzpRes.ok) throw new Error('Failed to initialize payment');
+      const rzpOrder = await rzpRes.json();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        name: "DesiCart",
+        description: "Secure Checkout",
+        order_id: rzpOrder.id,
+        handler: async function (response: any) {
+           try {
+             const payload = {
+                email: user?.email,
+                items: cart.map(c => ({
+                  productId: c.id,
+                  name: c.name,
+                  price: c.price,
+                  qty: c.qty,
+                  image: c.image
+                })),
+                total: cartTotal,
+                shippingAddress: address,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature
+             };
+             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+             });
+             if (!res.ok) throw new Error('Order creation failed');
+             const data = await res.json();
+             setOrderId(data._id);
+             setOrderSuccess(true);
+             clearCart();
+           } catch(e) {
+             alert('Payment verified, but failed to save order. Contact support.');
+           } finally {
+             setIsProcessing(false);
+           }
+        },
+        prefill: {
+          name: address.fullName,
+          email: user?.email,
+          contact: address.phone
+        },
+        theme: {
+          color: "#f97316"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+         alert(`Payment failed: ${response.error.description}`);
+         setIsProcessing(false);
+      });
+      rzp.open();
     } catch (err) {
       alert('Failed to place order. Please try again.');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -99,8 +138,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white pb-20">
-      {/* Checkout Header */}
+    <>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white pb-20">
+        {/* Checkout Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-black tracking-tight">
@@ -268,6 +309,6 @@ export default function CheckoutPage() {
           
         </div>
       </div>
-    </div>
+    </>
   );
 }
