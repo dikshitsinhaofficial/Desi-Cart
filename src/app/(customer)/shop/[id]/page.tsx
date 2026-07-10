@@ -7,14 +7,15 @@ import WishlistButton from './WishlistButton';
 import ReviewSection from './ReviewSection';
 import { Metadata } from 'next';
 
+import dbConnect from '@/lib/mongoose';
+import Product from '@/lib/models/Product';
+
 async function getProduct(id: string) {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/products/${id}`,
-      { next: { revalidate: 60 } }
-    );
-    if (!res.ok) return null;
-    return res.json();
+    await dbConnect();
+    const product = await Product.findById(id).lean();
+    if (!product) return null;
+    return JSON.parse(JSON.stringify(product));
   } catch {
     return null;
   }

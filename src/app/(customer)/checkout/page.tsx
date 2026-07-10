@@ -43,7 +43,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
     try {
-      const rzpRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/payment/razorpay-order`, {
+      const rzpRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/payment/razorpay-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: cartTotal })
@@ -75,7 +75,7 @@ export default function CheckoutPage() {
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature
              };
-             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders`, {
+             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

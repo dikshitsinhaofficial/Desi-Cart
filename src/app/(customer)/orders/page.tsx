@@ -46,7 +46,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders?email=${encodeURIComponent(user.email!)}`
+          `${process.env.NEXT_PUBLIC_API_URL || ''}/api/orders?email=${encodeURIComponent(user.email!)}`
         );
         if (res.ok) {
           const data = await res.json();

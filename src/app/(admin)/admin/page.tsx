@@ -9,7 +9,7 @@ import {
   ChevronRight, Loader2, RefreshCw
 } from 'lucide-react';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface Stats {
   productCount: number;
