@@ -37,9 +37,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <head>
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
-      </head>
+
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300">
         <AuthProvider>
           <CartProvider>

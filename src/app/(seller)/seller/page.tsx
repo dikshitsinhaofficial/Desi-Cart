@@ -67,10 +67,15 @@ export default function SellerDashboard() {
   };
 
   const fetchStats = async () => {
+    if (!user?.email) return;
     try {
-      const res = await fetch(`${API}/api/seller/stats`);
-      const data = await res.json();
-      setStats(data);
+      const res = await fetch(`${API}/api/seller/stats`, {
+        headers: { 'Authorization': `Bearer ${user.role || 'seller'}_${user.email}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
     } catch {
       // stats stay at 0 if backend is offline
     }
@@ -187,7 +192,22 @@ export default function SellerDashboard() {
     );
   }
 
-  if (user && user.role !== 'seller') {
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Login Required</h1>
+          <p className="text-slate-400 mb-6">Please sign in as a seller to access the dashboard.</p>
+          <button onClick={() => router.push('/login')} className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 rounded-xl font-semibold transition-colors">
+            Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role !== 'seller') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
         <div className="text-center">

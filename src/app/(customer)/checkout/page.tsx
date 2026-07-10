@@ -25,6 +25,7 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Redirect if cart empty or not logged in
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
+    setErrorMsg('');
     try {
       const rzpRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/payment/razorpay-order`, {
         method: 'POST',
@@ -52,7 +54,7 @@ export default function CheckoutPage() {
       const rzpOrder = await rzpRes.json();
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
         amount: rzpOrder.amount,
         currency: rzpOrder.currency,
         name: "DesiCart",
@@ -75,9 +77,13 @@ export default function CheckoutPage() {
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature
              };
+             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+             if (user?.role && user?.email) {
+               headers['Authorization'] = `Bearer ${user.role}_${user.email}`;
+             }
              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/orders`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(payload)
              });
              if (!res.ok) throw new Error('Order creation failed');
@@ -86,7 +92,7 @@ export default function CheckoutPage() {
              setOrderSuccess(true);
              clearCart();
            } catch(e) {
-             alert('Payment verified, but failed to save order. Contact support.');
+             setErrorMsg('Payment verified but failed to save order. Please contact support.');
            } finally {
              setIsProcessing(false);
            }
@@ -98,17 +104,22 @@ export default function CheckoutPage() {
         },
         theme: {
           color: "#f97316"
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessing(false);
+          }
         }
       };
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-         alert(`Payment failed: ${response.error.description}`);
+         setErrorMsg(`Payment failed: ${response.error.description}`);
          setIsProcessing(false);
       });
       rzp.open();
     } catch (err) {
-      alert('Failed to place order. Please try again.');
+      setErrorMsg('Failed to place order. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -197,7 +208,17 @@ export default function CheckoutPage() {
                   </div>
                   <button 
                     onClick={() => {
-                      if (!address.fullName || !address.phone || !address.address) return alert("Please fill all required fields");
+                      const missing = [];
+                      if (!address.fullName) missing.push('Full Name');
+                      if (!address.phone) missing.push('Phone');
+                      if (!address.address) missing.push('Address');
+                      if (!address.city) missing.push('City');
+                      if (!address.postalCode) missing.push('PIN Code');
+                      if (missing.length > 0) {
+                        setErrorMsg(`Please fill in: ${missing.join(', ')}`);
+                        return;
+                      }
+                      setErrorMsg('');
                       setStep(2);
                     }}
                     className="mt-6 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-colors"
@@ -246,11 +267,11 @@ export default function CheckoutPage() {
                     ))}
                   </div>
                   
-                  <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3">
-                    <ShieldCheck className="text-emerald-500 shrink-0 mt-0.5" />
+                  <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl p-4 flex items-start gap-3">
+                    <ShieldCheck className="text-blue-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold text-emerald-900 dark:text-emerald-400">Secure Payment Simulation</p>
-                      <p className="text-sm text-emerald-700 dark:text-emerald-500/80">In a production environment, Razorpay checkout would appear here. For now, clicking "Place Order" will immediately confirm your purchase.</p>
+                      <p className="font-bold text-blue-900 dark:text-blue-400">Powered by Razorpay</p>
+                      <p className="text-sm text-blue-700 dark:text-blue-500/80">Your payment is processed securely via Razorpay. We never store your card details.</p>
                     </div>
                   </div>
                 </div>
@@ -286,6 +307,11 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {errorMsg && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm font-medium">
+                  {errorMsg}
+                </div>
+              )}
               <button
                 onClick={handlePlaceOrder}
                 disabled={step !== 2 || isProcessing}

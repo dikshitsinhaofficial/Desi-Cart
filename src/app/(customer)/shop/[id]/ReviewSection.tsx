@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Star, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { motion } from 'framer-motion';
