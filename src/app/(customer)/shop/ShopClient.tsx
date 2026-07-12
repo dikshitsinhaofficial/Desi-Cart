@@ -13,6 +13,7 @@ import FilterSidebar from './components/FilterSidebar';
 import ShopBanner from './components/ShopBanner';
 import ProductGrid from './components/ProductGrid';
 import CartDrawer from './components/CartDrawer';
+import AIRecommendations from './components/AIRecommendations';
 
 interface ShopProduct {
   uid: string;
@@ -173,6 +174,13 @@ export default function ShopClient() {
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ShopBanner timeLeft={timeLeft} />
+        
+        {/* Only show AI recommendations on the main shop view without search/filters active */}
+        {category === 'All' && !search && selectedBrands.length === 0 && !minPrice && !maxPrice && (
+          <div className="mt-8">
+            <AIRecommendations onAddToCart={handleAddToCart} />
+          </div>
+        )}
 
         {/* Mobile filter bar */}
         <div className="flex items-center justify-between mt-6 mb-4 lg:hidden">

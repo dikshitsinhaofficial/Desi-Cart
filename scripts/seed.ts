@@ -1,9 +1,42 @@
-import { NextResponse, NextRequest } from 'next/server';
-import dbConnect from '@/lib/mongoose';
-import Product from '@/lib/models/Product';
-import { getAuthUser } from '@/lib/auth';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-// Seed data generator (mirrors the old express seeder)
+// Use path resolution to load the .env file from the root
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Since we are running outside Next.js, we should connect directly
+const MONGODB_URI = process.env.MONGO_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGO_URI is missing in .env');
+  process.exit(1);
+}
+
+// Minimal Product schema for the seed script
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  price: { type: Number, required: true },
+  mrp: { type: Number },
+  description: { type: String },
+  sellerName: { type: String, default: 'Anonymous Seller' },
+  rating: { type: Number, default: 0 },
+  reviews: { type: Number, default: 0 },
+  reviewList: [{
+    user: String,
+    rating: Number,
+    comment: String,
+    date: { type: Date, default: Date.now }
+  }],
+  image: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
+
 const CATEGORIES = [
   'Mobile Phones', 'Laptops & Accessories', 'Audio & Watches', 'Home & Kitchen',
   "Women's Clothing", "Men's Clothing", 'Gym Equipment', 'Food & Groceries',
@@ -58,23 +91,30 @@ function generateSeedProducts() {
   return products;
 }
 
-export async function POST(req: NextRequest) {
+async function runSeed() {
   try {
-    const user = getAuthUser(req);
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    console.log('⏳ Connecting to MongoDB...');
+    await mongoose.connect(MONGODB_URI as string);
+    console.log('✅ Connected to MongoDB.');
 
-    await dbConnect();
     const count = await Product.countDocuments();
     if (count > 0) {
-      return NextResponse.json({ message: `DB already has ${count} products — seed skipped.`, count });
+      console.log(`⚠️ DB already has ${count} products. Skipping seed to prevent duplicates.`);
+      process.exit(0);
     }
 
+    console.log('⏳ Generating products...');
     const products = generateSeedProducts();
+    
+    console.log(`⏳ Inserting ${products.length} products...`);
     await Product.insertMany(products);
-    return NextResponse.json({ message: `Seeded ${products.length} products successfully.`, count: products.length });
-  } catch (err) {
-    return NextResponse.json({ error: 'Seed failed' }, { status: 500 });
+    
+    console.log(`✅ Successfully seeded ${products.length} products!`);
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Seed failed:', error);
+    process.exit(1);
   }
 }
+
+runSeed();

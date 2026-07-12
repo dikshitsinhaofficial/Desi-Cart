@@ -323,14 +323,14 @@ npm run dev
 - ✅ 200+ Products
 - ✅ Product Filters
 - ✅ Search Functionality
+- ✅ Product Reviews
+- ✅ Order Tracking
+- ✅ AI Product Recommendations
 
 ---
 
 # 🛠 Future Improvements
 
-- Product Reviews
-- AI Product Recommendation
-- Order Tracking
 - Coupons & Offers
 - Email Notifications
 - Push Notifications
