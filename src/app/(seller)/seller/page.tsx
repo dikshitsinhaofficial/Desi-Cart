@@ -399,7 +399,7 @@ export default function SellerDashboard() {
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Image Preview</h3>
               <div className="w-full aspect-square bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col items-center justify-center relative">
                 {form.image ? (
-                   <img src={form.image} alt="Preview" className="w-full h-full object-cover" />
+                   <Image src={form.image} alt="Preview" fill className="object-cover" unoptimized />
                 ) : (
                   <>
                     <ImageIcon className="w-12 h-12 text-slate-700 mb-3" />

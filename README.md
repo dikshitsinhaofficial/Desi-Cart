@@ -196,24 +196,19 @@ https://github.com/dikshitsinhaofficial/Desi-Cart
 ```text
 Desi-Cart
 │
-├── frontend
-│   ├── src
-│   ├── app
-│   ├── components
-│   ├── lib
-│   └── public
+├── public          # Static assets (images, icons)
+├── scripts         # Utility scripts (seed database)
+├── src
+│   ├── app         # Next.js App Router pages and API routes
+│   │   ├── api     # Backend REST API routes
+│   │   ├── (admin) # Admin dashboard routes
+│   │   └── (customer) # Customer facing routes
+│   ├── components  # Reusable React components
+│   └── lib         # Helper functions, contexts, and database models
 │
-├── backend
-│   ├── src
-│   ├── routes
-│   ├── models
-│   ├── controllers
-│   └── middleware
-│
-├── screenshots
-│
-├── README.md
-└── vercel.json
+├── screenshots     # Project screenshots for README
+├── package.json    # Project dependencies and scripts
+└── README.md       # Project documentation
 ```
 
 ---
@@ -235,12 +230,6 @@ cd Desi-Cart
 Install Dependencies
 
 ```bash
-npm install
-
-cd frontend
-npm install
-
-cd ../backend
 npm install
 ```
 
@@ -283,14 +272,6 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 ---
 
 # ▶ Running the Project
-
-Backend
-
-```bash
-npm run dev
-```
-
-Frontend
 
 ```bash
 npm run dev

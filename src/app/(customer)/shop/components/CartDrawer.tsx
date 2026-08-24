@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, CheckCircle2, Trash2, Plus, Minus, CreditCard, Wallet as WalletIcon, Truck, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { useCart, CartItem } from '@/lib/CartContext';
 import API from '@/lib/api';
@@ -290,9 +291,9 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
                 <div className="space-y-4">
                   {cart.map((item) => (
                     <div key={item.id} className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex gap-4">
-                      <div className="w-20 h-20 bg-slate-50 rounded-xl overflow-hidden shrink-0">
+                      <div className="w-20 h-20 bg-slate-50 rounded-xl overflow-hidden shrink-0 relative">
                         {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
                         )}
