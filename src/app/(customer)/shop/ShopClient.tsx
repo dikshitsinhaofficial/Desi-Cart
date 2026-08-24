@@ -125,9 +125,11 @@ export default function ShopClient() {
 
     fetch(`${API}/api/products?${params.toString()}`)
       .then(r => r.json())
-      .then((data: Array<any>) => {
-        const mapped: ShopProduct[] = data.map(p => ({
-          uid:      String(p._id),
+      .then((data: any) => {
+        // API returns { products, total, ... } OR a plain array (legacy)
+        const rawProducts = Array.isArray(data) ? data : (data.products || []);
+        const mapped: ShopProduct[] = rawProducts.map((p: any) => ({
+          uid:      String(p._id || p.uid),
           name:     String(p.name),
           category: String(p.category),
           price:    Number(p.price),

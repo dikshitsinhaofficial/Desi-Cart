@@ -26,8 +26,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, items, total, shippingAddress, razorpayPaymentId, razorpayOrderId, razorpaySignature } = body;
-    if (!email || !items || !total) return NextResponse.json({ error: 'Missing order details' }, { status: 400 });
+    const user = getAuthUser(req);
+    // Use authenticated email if available, fallback to body email for anonymous checkout
+    const orderEmail = user?.email || body.email;
+
+    const { items, total, shippingAddress, razorpayPaymentId, razorpayOrderId, razorpaySignature } = body;
+    if (!orderEmail || !items || !total) return NextResponse.json({ error: 'Missing order details' }, { status: 400 });
 
     // Payment verification is MANDATORY — no bypass allowed (unless using wallet/COD, which shouldn't hit this exact check if implemented this way, but we'll assume it's valid for now based on original code)
     if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
@@ -54,13 +58,13 @@ export async function POST(req: NextRequest) {
     });
 
     const order = new Order({
-      email, items: enrichedItems, total, shippingAddress,
+      email: orderEmail, items: enrichedItems, total, shippingAddress,
       razorpayOrderId, razorpayPaymentId, razorpaySignature
     });
     await order.save();
     
     // Send Confirmation Email
-    await sendOrderConfirmationEmail(email, order._id.toString(), total);
+    await sendOrderConfirmationEmail(orderEmail, order._id.toString(), total);
 
     return NextResponse.json(order, { status: 201 });
   } catch (err) {

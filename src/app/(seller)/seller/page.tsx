@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import API from '../../../lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { CATEGORIES } from '@/app/data/products';
-import { Shield, Loader2, Image as ImageIcon, ShoppingCart, RefreshCw } from 'lucide-react';
+import { Shield, Loader2, Image as ImageIcon, ShoppingCart, RefreshCw, X } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface Product {
@@ -42,6 +42,7 @@ export default function SellerDashboard() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [showSidebar, setShowSidebar] = useState(false);
 
   useEffect(() => {
     if (user?.email) {
@@ -57,10 +58,10 @@ export default function SellerDashboard() {
   const fetchMyProducts = async () => {
     if (!user?.email) return;
     try {
-      // Filter products by this seller's email
       const res = await fetch(`${API}/api/products?seller=${encodeURIComponent(user.email)}`);
       const data = await res.json();
-      setMyProducts(data);
+      const products = Array.isArray(data) ? data : (data.products || []);
+      setMyProducts(products);
     } catch {
       showToast('Could not fetch products', 'error');
     }
@@ -230,37 +231,93 @@ export default function SellerDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex transition-colors duration-300">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 border-r border-slate-800 shadow-md flex flex-col shrink-0">
-        <div className="p-6 border-b border-slate-800 flex flex-col items-center">
-          <h2 className="text-xl font-bold">
+    <div className="min-h-screen bg-slate-950 text-white transition-colors duration-300">
+      {/* Mobile Header */}
+      <div className="lg:hidden sticky top-0 z-40 bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowSidebar(true)}
+            className="p-2 hover:bg-slate-800 rounded-xl transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <h2 className="text-lg font-bold">
             <span className="text-white">Desi</span><span className="text-orange-500">Cart</span>
+            <span className="text-xs text-slate-500 ml-2">Seller</span>
           </h2>
-          <h3 className="text-xs font-semibold text-slate-500 mt-2 uppercase tracking-wider">Seller Portal</h3>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {navItems.map(item => (
-            <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
-              className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                activeTab === item.key
-                  ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span>{item.icon}</span> {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
-          {myProducts.length} product{myProducts.length !== 1 ? 's' : ''} listed
-        </div>
-      </aside>
+        <span className="text-xs text-slate-500">{navItems.find(n => n.key === activeTab)?.icon} {navItems.find(n => n.key === activeTab)?.label}</span>
+      </div>
+
+      <div className="flex">
+        {/* Mobile Sidebar Overlay */}
+        {showSidebar && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSidebar(false)} />
+            <aside className="absolute left-0 top-0 bottom-0 w-72 bg-slate-900 border-r border-slate-800 shadow-2xl flex flex-col z-10">
+              <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">
+                    <span className="text-white">Desi</span><span className="text-orange-500">Cart</span>
+                  </h2>
+                  <h3 className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">Seller Portal</h3>
+                </div>
+                <button onClick={() => setShowSidebar(false)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+              <nav className="flex-1 px-4 py-6 space-y-2">
+                {navItems.map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => { setActiveTab(item.key); setShowSidebar(false); }}
+                    className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      activeTab === item.key
+                        ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <span>{item.icon}</span> {item.label}
+                  </button>
+                ))}
+              </nav>
+              <div className="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+                {myProducts.length} product{myProducts.length !== 1 ? 's' : ''} listed
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:flex w-64 bg-slate-900 border-r border-slate-800 shadow-md flex-col shrink-0 min-h-screen">
+          <div className="p-6 border-b border-slate-800 flex flex-col items-center">
+            <h2 className="text-xl font-bold">
+              <span className="text-white">Desi</span><span className="text-orange-500">Cart</span>
+            </h2>
+            <h3 className="text-xs font-semibold text-slate-500 mt-2 uppercase tracking-wider">Seller Portal</h3>
+          </div>
+          <nav className="flex-1 px-4 py-6 space-y-2">
+            {navItems.map(item => (
+              <button
+                key={item.key}
+                onClick={() => setActiveTab(item.key)}
+                className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                  activeTab === item.key
+                    ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <span>{item.icon}</span> {item.label}
+              </button>
+            ))}
+          </nav>
+          <div className="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+            {myProducts.length} product{myProducts.length !== 1 ? 's' : ''} listed
+          </div>
+        </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
         {/* ── Dashboard Tab ── */}
         {activeTab === 'dashboard' && (
           <div>
@@ -290,7 +347,7 @@ export default function SellerDashboard() {
 
         {/* ── Add Product Tab ── */}
         {activeTab === 'add' && (
-          <div className="max-w-4xl flex gap-8">
+          <div className="max-w-4xl flex flex-col lg:flex-row gap-8">
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-white mb-2">Add New Product</h1>
               <p className="text-slate-400 mb-8 text-sm">Fill in the details to list a new item on your store.</p>
@@ -395,7 +452,7 @@ export default function SellerDashboard() {
             </div>
             
             {/* Image Preview Panel */}
-            <div className="w-80 shrink-0">
+            <div className="w-full lg:w-80 shrink-0">
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Image Preview</h3>
               <div className="w-full aspect-square bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col items-center justify-center relative">
                 {form.image ? (
@@ -545,6 +602,7 @@ export default function SellerDashboard() {
           </div>
         )}
       </main>
+      </div>
 
       {/* Toast */}
       {toast && (

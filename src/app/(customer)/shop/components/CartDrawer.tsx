@@ -29,6 +29,12 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'razorpay' | 'cod'>('wallet');
   const [formError, setFormError] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showCoupon, setShowCoupon] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<any>(null);
 
   const cartSubtotal = cart.reduce((sum, e) => sum + e.price * e.quantity, 0);
@@ -50,6 +56,40 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
     }
     setFormError('');
     return true;
+  };
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch(`${API}/api/checkout/apply-coupon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode.trim().toUpperCase(), cartTotal: cartSubtotal }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCouponDiscount(data.discount || 0);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponError(data.message || 'Invalid coupon code');
+        setCouponDiscount(0);
+        setCouponApplied(false);
+      }
+    } catch {
+      setCouponError('Failed to apply coupon');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode('');
+    setCouponDiscount(0);
+    setCouponApplied(false);
+    setCouponError('');
   };
 
   const handleCheckoutSubmit = async () => {
@@ -420,6 +460,50 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
                       </label>
                     </div>
                   </div>
+
+                    {/* Coupon Code Section */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                      <button
+                        onClick={() => setShowCoupon(!showCoupon)}
+                        className="w-full flex items-center justify-between text-sm font-bold text-slate-700"
+                      >
+                        <span className="flex items-center gap-2">🏷️ Have a coupon code?</span>
+                        <span className="text-orange-500 text-xs">{showCoupon ? 'Hide' : 'Show'}</span>
+                      </button>
+                      {showCoupon && (
+                        <div className="mt-4 space-y-3">
+                          {couponApplied ? (
+                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                              <div>
+                                <p className="text-sm font-bold text-emerald-700">✅ {couponCode.toUpperCase()}</p>
+                                <p className="text-xs text-emerald-600">Discount: ₹{couponDiscount.toLocaleString('en-IN')}</p>
+                              </div>
+                              <button onClick={removeCoupon} className="text-xs text-red-500 font-semibold hover:underline">Remove</button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={couponCode}
+                                  onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                                  placeholder="Enter coupon code"
+                                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm uppercase tracking-wider font-bold focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all"
+                                />
+                                <button
+                                  onClick={applyCoupon}
+                                  disabled={couponLoading || !couponCode.trim()}
+                                  className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white text-sm font-bold rounded-xl transition-colors"
+                                >
+                                  {couponLoading ? '...' : 'Apply'}
+                                </button>
+                              </div>
+                              {couponError && <p className="text-xs text-red-500 font-medium">{couponError}</p>}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                 </div>
               )}
 
@@ -475,10 +559,16 @@ export default function CartDrawer({ showCart, setShowCart, walletBalance, fetch
                   Add ₹{1000 - cartSubtotal} more for FREE shipping!
                 </div>
               )}
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600">
+                  <span>Coupon Discount</span>
+                  <span className="font-semibold">-₹{couponDiscount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="pt-3 border-t border-slate-100 flex justify-between items-end">
                 <span className="text-base font-bold text-slate-800">Total</span>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-slate-900 leading-none">₹{cartTotal.toLocaleString('en-IN')}</span>
+                  <span className="text-2xl font-black text-slate-900 leading-none">₹{(cartTotal - couponDiscount).toLocaleString('en-IN')}</span>
                   <p className="text-[10px] text-slate-400 mt-1">Inclusive of all taxes</p>
                 </div>
               </div>

@@ -11,8 +11,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
   signOut,
   getAuth,
@@ -82,25 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Handle redirect result from Google Sign-In
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result?.user) {
-          const snap = await getDoc(doc(db, 'users', result.user.uid));
-          if (!snap.exists()) {
-            await setDoc(doc(db, 'users', result.user.uid), {
-              email: result.user.email,
-              displayName: result.user.displayName,
-              role: 'customer',
-              createdAt: new Date().toISOString(),
-            });
-          }
-          const authUser = await toAuthUser(result.user);
-          setUser(authUser);
-        }
-      })
-      .catch(() => {});
-
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const authUser = await toAuthUser(firebaseUser);
@@ -139,13 +119,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    // Redirect-based flow works on all domains including Vercel
-    await signInWithRedirect(auth, googleProvider);
-    // Result is handled in useEffect via getRedirectResult
+    const result = await signInWithPopup(auth, googleProvider);
+    if (result?.user) {
+      const snap = await getDoc(doc(db, 'users', result.user.uid));
+      if (!snap.exists()) {
+        await setDoc(doc(db, 'users', result.user.uid), {
+          email: result.user.email,
+          displayName: result.user.displayName,
+          role: 'customer',
+          createdAt: new Date().toISOString(),
+        });
+      }
+      const authUser = await toAuthUser(result.user);
+      setUser(authUser);
+    }
   };
 
   const logout = async () => {
     await signOut(auth);
+    document.cookie = 'desi-cart-role=; path=/; max-age=0';
+    localStorage.removeItem('desi-cart-basket');
+    window.dispatchEvent(new Event('clearCart'));
     setUser(null);
   };
 
